@@ -292,22 +292,149 @@ Keel se dirige a las empresas que reparan y mantienen embarcaciones. Se distingu
 
 ### **2.1.1. Diseño de entrevistas**
 
-*\[Preguntas principales y complementarias por segmento. Deben permitir identificar las entidades necesarias para la base de datos.\]*  
- 
+Para identificar las entidades de datos, sus atributos y las relaciones que debe modelar Keel, se preparó una entrevista semiestructurada para una persona de Refrymar Perú S.A.C., empresa que se dedica al mantenimiento y la reparación de sistemas de refrigeración de embarcaciones. El entrevistado trabaja desde hace varios años en la dirección de la empresa. Recibe los pedidos, coordina la revisión inicial y prepara las propuestas con el área técnica, por lo que conoce los datos que se manejan en cada etapa del servicio.  
+Refrymar pertenece al segmento de astilleros y talleres medianos y pequeños de la costa, que es el segmento prioritario definido en la sección 1.3. En esta entrega se entrevistó solo a este segmento; los demás se validarán en las siguientes entregas.  
+La guía tiene 18 preguntas principales agrupadas en ocho bloques que siguen el orden del proceso de reparación. Para obtener respuestas concretas, se pidió al entrevistado que eligiera un servicio reciente y lo siguiera de principio a fin. Antes de la entrevista, el entrevistado revisó la guía y se acordó hacer solo las preguntas principales. Las preguntas son las siguientes.  
+**Entrevistado:** integrante de la dirección de Refrymar Perú S.A.C.  
+**Bloque 1: Empresa y caso reciente**
+
+1. ¿Qué servicios realiza Refrymar Perú y cuál es su participación en ellos?  
+2. Pensemos en una reparación reciente que conozca bien. ¿Qué necesitaba el cliente y cómo transcurrió el servicio desde el primer contacto hasta su situación actual?
+
+**Bloque 2: Clientes, embarcaciones y equipos**
+
+3. En ese servicio, ¿quién contrató la reparación y con quién coordinaron las decisiones?  
+4. ¿Cómo identifican la embarcación y el sistema o equipo que van a intervenir, y dónde guardan su historial?
+
+**Bloque 3: Solicitudes, inspecciones y cotizaciones**
+
+5. En el caso que estamos siguiendo, ¿cómo recibieron el pedido y qué revisaron antes de preparar la primera cotización?  
+6. ¿Qué información incluyeron en la cotización y cómo determinaron el importe y el plazo?  
+7. ¿Cómo se acordó la cotización definitiva y qué evidencia se conservó de esa aprobación?
+
+**Bloque 4: Organización, ejecución y cambios**
+
+8. Con el presupuesto aceptado, ¿cómo organizaron los trabajos y quién quedó a cargo de cada uno?  
+9. Mientras se ejecutaba el servicio, ¿cómo sabían qué se había hecho, qué faltaba y qué se estaba haciendo?  
+10. Cuando aparece una falla o un trabajo que no estaba incluido en lo aprobado, ¿cómo deciden qué hacer? Cuéntenos un caso, si les ha ocurrido.
+
+**Bloque 5: Repuestos, herramientas y compras**
+
+11. En esa reparación, ¿cómo controlaron los repuestos y materiales utilizados y las herramientas que debían devolverse?  
+12. Si falta un repuesto o material, ¿cómo gestionan su compra y confirman que está disponible para usarlo?
+
+**Bloque 6: Seguridad y pruebas**
+
+13. ¿Cómo interviene el responsable de seguridad, salud ocupacional y medio ambiente (SSOMA) antes y durante los trabajos, y qué deja registrado?  
+14. ¿Cómo verificaron que la reparación quedó bien y qué resultados conservaron?
+
+**Bloque 7: Entrega, cobro y cierre**
+
+15. ¿Cómo presentaron el resultado al cliente y cómo quedó registrada su conformidad o sus observaciones?  
+16. Después de la entrega, ¿cómo gestionan el cobro y qué debe quedar resuelto para dar el servicio por cerrado?
+
+**Bloque 8: Problemas actuales y adopción de Keel**
+
+17. De todo el recorrido, ¿qué dificultad de gestión les genera más trabajo o pérdidas? Cuéntenos la última vez que ocurrió y cómo la resolvieron.  
+18. Pensando en esa dificultad, ¿qué tendría que resolver una herramienta como Keel para que Refrymar decida probarla, y qué podría impedir que la use?
 
 ### **2.1.2. Registro de entrevistas**
 
-*\[Por segmento, 1 a 2 entrevistas. Por entrevista: nombres, apellidos, edad, distrito, captura del video, URL de YouTube con el minuto de inicio y la duración, y un resumen de las respuestas.\]*  
+**Segmento:** astilleros y talleres medianos y pequeños de la costa (segmento primario). Entrevista 1 de 1\.
+
+| Campo | Dato |
+| :---- | :---- |
+| Nombres | Alexis Yanpoll |
+| Apellidos | Garay Yovera |
+| Edad | \[completar\] |
+| Distrito | \[completar\] |
+| Empresa y cargo | Refrymar Perú S.A.C., dirección de la empresa |
+| Fecha y modalidad | 12/11/2026, por videollamada |
+| URL de YouTube | \[completar\] |
+| Minuto de inicio y duración | Inicio: \[completar\]. Duración: 19 minutos aproximadamente. |
+
+*\[Insertar captura del video de la entrevista.\]*  
+**Resumen de las respuestas**  
+**Empresa y caso reciente (preguntas 1 y 2).** Refrymar se dedica al mantenimiento y la reparación de sistemas de refrigeración, sobre todo de embarcaciones pesqueras del Callao y de otros puertos del país, y también hace trabajos eléctricos y electrónicos relacionados con esos sistemas. El entrevistado recibe los pedidos, coordina la revisión inicial y prepara la propuesta con el área técnica de refrigeración. Como caso reciente contó el de una embarcación que no alcanzaba la temperatura de operación necesaria para conservar el pescado. Recibieron el aviso, prepararon la cotización, organizaron los trabajos, retiraron del almacén los materiales y ejecutaron la reparación. Durante la intervención encontraron un componente deteriorado que no estaba en la cotización inicial; lo cotizaron por separado y esperaron la autorización del cliente. Al final hicieron las pruebas, entregaron el informe y cobraron.  
+**Clientes, embarcaciones y equipos (preguntas 3 y 4).** El servicio lo contrató una empresa pesquera, que coordina por medio de un representante. Una misma empresa puede pedir trabajos para varias embarcaciones, y si cambia de representante lo comunica y el nuevo continúa con lo coordinado antes. La embarcación se identifica por su nombre, su matrícula y la empresa que contrata el servicio. Del equipo se anota la ubicación a bordo, la marca, el modelo y otros datos propios del equipo cuando están disponibles. Las cotizaciones y los informes se guardan en carpetas digitales ordenadas por cliente y embarcación, pero las fotografías y los mensajes quedan en otros lugares y hay que buscarlos para armar el historial.  
+**Solicitud, inspección y cotización (preguntas 5, 6 y 7).** El pedido llegó por correo al área de operaciones, donde se anotó el contacto, la embarcación, el problema reportado y la urgencia. Luego se coordinó una inspección: quien revisó el sistema registró observaciones, fotografías y mediciones, y con eso se definió el alcance inicial. Si el cliente no contrata, igual se conservan la ficha y la propuesta; cuando la inspección tiene un costo propio, se acuerda antes de hacerla. La cotización incluye los trabajos propuestos, los repuestos y materiales con sus cantidades y precios, la mano de obra, los gastos de traslado, los gases, la moneda, el IGV, el plazo estimado de ejecución, la vigencia y las condiciones del servicio. El importe se calcula con el costo de materiales, las horas de mano de obra, otros gastos y el margen comercial, y para el plazo se considera el acceso a la embarcación, porque a veces el puerto se cierra por el clima. En este caso el cliente pidió cambiar una parte del alcance y se envió una segunda versión. Cada cotización tiene un número y una versión, y se guarda cada PDF para saber qué cambió. El representante aceptó la nueva versión por correo; esa respuesta se conserva y recién entonces se pasa a la ejecución. Si la cotización vence o no hay respuesta, se hace seguimiento, y si no se aprueba queda archivada.  
+**Organización, ejecución y cambios (preguntas 8, 9 y 10).** Con la cotización aprobada se abre una orden de servicio vinculada a esa cotización y a la embarcación. El jefe técnico divide el alcance en trabajos y asigna un responsable a cada uno según su especialidad, experiencia y disponibilidad. Pueden participar varios técnicos, pero cada trabajo tiene un responsable, fechas previstas y recursos. Algunas actividades siguen una secuencia y otras avanzan en paralelo. Durante la ejecución, el responsable de cada trabajo comunica el avance y se registra en una hoja de Excel, donde se distingue lo pendiente, lo que está en ejecución, en espera o en pruebas. Si falta un repuesto o una autorización se anota, y los cambios de fecha los corrige el jefe técnico. Cuando aparece algo no incluido, el técnico lo reporta y explica por qué; el jefe técnico revisa qué se necesita y operaciones prepara la propuesta para el cliente, que debe aprobarla antes de ejecutarla, como pasó con el componente deteriorado.  
+**Repuestos, herramientas y compras (preguntas 11 y 12).** La empresa tiene un almacén de repuestos, materiales y herramientas que se controla en Excel, con código, descripción, ubicación, cantidad y unidad. Cada salida indica la orden de servicio, el trabajo y la persona que recibe. Al terminar se informa cuánto se consumió y cuánto sobró, y el sobrante vuelve al inventario. Las herramientas se controlan como préstamos que deben devolverse. También se revisan físicamente las existencias, porque si una salida no se anota a tiempo el registro muestra más de lo que hay. Si falta un repuesto, el técnico lo comunica, almacén verifica el stock y compras lo solicita al proveedor, cuyos datos y contactos se guardan. Al recibir el pedido se verifican cantidades y condiciones, y recién entonces se actualiza el stock. Si llega solo una parte, se registra lo recibido y lo pendiente. El trabajo afectado espera y los demás continúan si no dependen de ese repuesto.  
+**Seguridad y pruebas (preguntas 13 y 14).** El responsable de SSOMA supervisa los trabajos y revisa las condiciones de seguridad antes, durante y después de la intervención. Registra los controles, las observaciones, los responsables y las evidencias. Ante riesgos específicos, como una fuga de amoniaco, los controles son más estrictos. Para verificar la reparación, el jefe técnico define las pruebas según el equipo y el alcance. Con la embarcación en el muelle se registran las condiciones de operación, como presión y temperatura, y se comparan con los criterios del equipo. Si están en el rango aceptable, la prueba se valida y se informa al cliente. Si una prueba falla, se registra el resultado, se corrige la causa y se vuelve a probar.  
+**Entrega, cobro y cierre (preguntas 15 y 16).** El jefe técnico prepara un informe con el problema inicial, el diagnóstico, los trabajos realizados, los materiales y las pruebas. Se envía al representante del cliente y se coordina una revisión para obtener su conformidad, por correo u otro medio. Las observaciones del cliente se registran; si corresponden al alcance del servicio se corrigen y se verifica todo de nuevo. El cobro se hace según el presupuesto aprobado y los adicionales autorizados. El cliente paga por transferencia y administración verifica el ingreso en la cuenta antes de marcar el trabajo como pagado y asociar el comprobante; el movimiento se registra en el sistema de caja de la empresa. Para cerrar el servicio deben estar terminados los trabajos y las pruebas, hecha la entrega técnica y registrada la garantía con sus condiciones.  
+**Problemas actuales y adopción de Keel (preguntas 17 y 18).** La mayor dificultad es que la información está repartida en mensajes, hojas de Excel, fotografías y documentos. Para preparar un informe hay que pedir todo a varias áreas y se pierde tiempo; la demora no está solo en la ejecución, sino también en la parte administrativa de entregar el informe y los documentos. Para probar una herramienta, pediría ver el estado de cada reparación y reunir en el sistema los trabajos, los materiales y lo demás; que los técnicos puedan registrar desde el celular; que el cliente pueda consultar el avance y aprobar lo que corresponda; y que registrar no tome mucho tiempo ni genere duplicados. La evaluarían con una prueba en una reparación, revisando si facilita el seguimiento y reduce el tiempo de preparar el informe. Sobre el precio no dio una cifra. Al cierre indicó que las preguntas cubrieron lo necesario para entender la situación de la empresa.  
  
 
 ### **2.1.3. Análisis de entrevistas**
 
-*\[Análisis por segmento con porcentajes, que muestre características objetivas y subjetivas, relacionadas con las entrevistas registradas.\]*  
+**Segmento:** astilleros y talleres medianos y pequeños de la costa (1 entrevista). Como hay una sola entrevista, los porcentajes se calculan sobre los registros y las necesidades que mencionó el entrevistado, no sobre un grupo de personas.  
+**Características objetivas**
+
+* Refrymar atiende principalmente a embarcaciones pesqueras del Callao y de otros puertos del país, y sus clientes son empresas que coordinan por medio de un representante.  
+* El servicio sigue nueve etapas: pedido, inspección, cotización, aprobación, orden de servicio, ejecución de trabajos, pruebas, entrega con conformidad, y cobro y cierre.  
+* Intervienen siete roles: operaciones, jefe técnico, técnicos, almacén, compras, SSOMA y administración.  
+* De los ocho registros del proceso que mencionó, siete (87,5 %) se llevan en herramientas no conectadas entre sí (correo, Excel y carpetas con PDF). Solo los pagos (12,5 %) se registran en un sistema.
+
+| Medio actual | Registros que se llevan ahí | Cantidad | Porcentaje |
+| :---- | :---- | :---- | :---- |
+| Correo | Pedido del cliente, aprobación de la cotización, conformidad del cliente | 3 | 37,5 % |
+| Excel | Avance de los trabajos, inventario y salidas de almacén | 2 | 25,0 % |
+| Carpetas digitales y PDF | Historial de cotizaciones e informes, versiones de la cotización | 2 | 25,0 % |
+| Sistema de caja | Pagos | 1 | 12,5 % |
+| Total |  | 8 | 100 % |
+
+**Características subjetivas**
+
+* Lo que más le preocupa es el tiempo que se pierde buscando información dispersa, sobre todo al preparar el informe final y los documentos de entrega.  
+* Ve con buenos ojos una herramienta que reúna todo, pero la probaría primero en una sola reparación antes de adoptarla.  
+* No dio una cifra de precio, así que la viabilidad de la suscripción queda pendiente de validar.
+
+El entrevistado mencionó cinco necesidades. Dos de ellas (40 %) ya están en los módulos propuestos en la sección 1.2.2, y tres (60 %) son nuevas y se agregan como requisitos.
+
+| Necesidad mencionada | ¿Está en los módulos de la 1.2.2? | Cómo se atiende |
+| :---- | :---- | :---- |
+| Ver el estado de cada reparación | Sí | Órdenes de trabajo y seguimiento del estado |
+| Reunir trabajos, materiales y documentos en un solo lugar | Sí | Registro de embarcaciones, órdenes de trabajo y almacén |
+| Que los técnicos registren desde el celular | No | Nuevo requisito (HU12) |
+| Que el cliente consulte el avance y apruebe en línea | No | Nuevo requisito (HU22) |
+| Registrar rápido y sin duplicados | No | Requisito no funcional |
+
+**Conclusión del segmento.** La entrevista respalda la hipótesis de la sección 1.2.2: el problema principal es la información dispersa, que hace perder tiempo en el seguimiento y en la entrega. También confirma los datos que Keel debe manejar: clientes y representantes, embarcaciones y equipos, solicitudes con inspección, cotizaciones con versiones, órdenes de servicio divididas en trabajos, almacén y compras, SSOMA, pruebas, informe con conformidad y pagos.  
  
 
 ## **2.2. Requisitos**
 
-*\[Lista de requisitos funcionales, por ejemplo como historias de usuario.\]*  
+Los requisitos funcionales se escriben como historias de usuario. Cada una indica la pregunta de la entrevista de la que surge.
+
+| ID | Historia de usuario | Origen |
+| :---- | :---- | :---- |
+| HU01 | Como personal de operaciones, quiero registrar clientes y sus representantes, indicando cuál está vigente, para saber con quién coordinar cada servicio. | P3 |
+| HU02 | Como personal de operaciones, quiero registrar embarcaciones con su nombre, matrícula y empresa contratante, y sus equipos con ubicación a bordo, marca, modelo y número de serie, para identificarlos sin confusiones. | P4 |
+| HU03 | Como personal de operaciones, quiero consultar en un solo lugar el historial de servicios, cotizaciones, informes y fotografías de una embarcación, para no buscarlos en carpetas y mensajes separados. | P4, P17 |
+| HU04 | Como personal de operaciones, quiero registrar una solicitud con el contacto, la embarcación, el problema reportado y la urgencia, para empezar el servicio con la información completa. | P5 |
+| HU05 | Como técnico, quiero registrar la inspección inicial con observaciones, mediciones y fotografías, para definir el alcance de la cotización. | P5 |
+| HU06 | Como personal de operaciones, quiero elaborar cotizaciones con trabajos, materiales, mano de obra, traslados, moneda, IGV, plazo, vigencia y condiciones, para presentar un presupuesto completo. | P6 |
+| HU07 | Como personal de operaciones, quiero que cada cotización tenga número y versión y que se conserven todas las versiones, para saber qué cambió entre una y otra. | P7 |
+| HU08 | Como personal de operaciones, quiero registrar la aprobación del cliente con la fecha, el representante y la evidencia, para pasar a la ejecución solo con una versión aprobada. | P7 |
+| HU09 | Como personal de operaciones, quiero ver las cotizaciones vencidas o sin respuesta, para hacerles seguimiento o archivarlas. | P7 |
+| HU10 | Como jefe técnico, quiero abrir una orden de servicio vinculada a la cotización aprobada y a la embarcación, para organizar la ejecución. | P8 |
+| HU11 | Como jefe técnico, quiero dividir la orden en trabajos y asignar a cada uno un responsable, técnicos de apoyo, fechas previstas y trabajos previos, para planificar la reparación. | P8 |
+| HU12 | Como técnico, quiero registrar el avance de mi trabajo desde el celular y cambiar su estado (pendiente, en ejecución, en espera, en pruebas o terminado), para que todos sepan cómo va. | P9, P18 |
+| HU13 | Como jefe técnico, quiero ver el estado de todas las reparaciones y sus trabajos, incluidos los que esperan un repuesto o una autorización, para reprogramar fechas. | P9, P18 |
+| HU14 | Como técnico, quiero reportar un hallazgo no incluido en la cotización, para que operaciones prepare un adicional y el cliente lo apruebe antes de ejecutarlo. | P10 |
+| HU15 | Como encargado de almacén, quiero registrar artículos con código, descripción, ubicación, stock y unidad, para saber qué hay disponible. | P11 |
+| HU16 | Como encargado de almacén, quiero registrar cada salida con la orden, el trabajo y la persona que recibe, y luego lo consumido y lo devuelto, para controlar el uso de materiales. | P11 |
+| HU17 | Como encargado de almacén, quiero registrar el préstamo y la devolución de herramientas, para saber quién tiene cada una. | P11 |
+| HU18 | Como encargado de compras, quiero registrar pedidos a proveedores y sus recepciones parciales o completas, para actualizar el stock solo con lo recibido. | P12 |
+| HU19 | Como responsable de SSOMA, quiero registrar controles, observaciones, responsables y evidencias antes, durante y después de los trabajos, para dejar constancia de la seguridad. | P13 |
+| HU20 | Como jefe técnico, quiero registrar las pruebas con los valores medidos de presión y temperatura y compararlos con el rango aceptable, para validar la reparación o repetir la prueba si falla. | P14 |
+| HU21 | Como jefe técnico, quiero generar el informe técnico con lo ya registrado (problema, diagnóstico, trabajos, materiales y pruebas), para entregarlo más rápido. | P15, P17 |
+| HU22 | Como representante del cliente, quiero consultar el avance de mi reparación y aprobar cotizaciones y adicionales en línea, para no depender del correo. | P18 |
+| HU23 | Como personal de operaciones, quiero registrar la conformidad o las observaciones del cliente y su atención, para cerrar la entrega. | P15 |
+| HU24 | Como personal de administración, quiero registrar el pago, verificarlo y asociar el comprobante, para marcar la orden como pagada. | P16 |
+| HU25 | Como jefe técnico, quiero cerrar la orden solo cuando los trabajos, las pruebas, la conformidad y el pago estén completos, y registrar la garantía, para dar el servicio por terminado. | P16 |
+
+Además, el entrevistado pidió que registrar la información sea rápido y no genere duplicados. Esto se considera un requisito no funcional de usabilidad e integridad de datos.  
  
 
 # **Capítulo III: Diseño de base de datos**
