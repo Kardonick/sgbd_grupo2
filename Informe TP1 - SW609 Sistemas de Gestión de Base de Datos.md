@@ -31,6 +31,7 @@ Lima, octubre de 2026
 | 1.0 | 29/10/2026 | Franz Nuñez | Primera versión del informe: Capítulo I. |
 | 1.1 | 30/10/2026 | Roy Farid Puris Ricaldi | Redacción del Capítulo I (secciones 1.1 a 1.3). |
 | 1.2 | 12/11/2026 | Roy Farid Puris Ricaldi | Redacción de los capítulos II y III (secciones 2.1 a 3.3). |
+| 1.3 | 12/11/2026 | Dair David Ramos Jacay | Redacción del Capítulo IV: evaluación y elección del SGBD relacional (4.1.1) y especificación e implementación del diagrama entidad-relación físico (4.2.1). |
 
 *Cada fila lleva un solo autor. Agregar una fila por cada versión relevante (secciones nuevas, correcciones por retroalimentación del docente, etc.).*
 
@@ -1136,17 +1137,597 @@ erDiagram
 
 ## 4.1. Sistema de gestión de base de datos
 
+El Sistema de Gestión de Base de Datos (SGBD o DBMS, por sus siglas en inglés) constituye la pieza medular sobre la cual se erige la arquitectura de persistencia y procesamiento transaccional de **Keel**, la plataforma de software como servicio (SaaS) diseñada por la startup **DALERST** para la industria naval y de mantenimiento de embarcaciones. En un contexto operativo como el naval —caracterizado por intervenciones técnicas complejas, multiplicidad de actores concurrentes (jefes técnicos, técnicos de taller, encargados de almacén, inspectores de seguridad SSOMA, personal de adquisiciones y representantes de empresas armadoras) y exigencias normativas estrictas—, la base de datos no puede ser únicamente un repositorio pasivo de información, sino un motor activo que garantice integridad, alta concurrencia, disponibilidad y consistencia matemática en cada transacción.
+
+El diseño modular de Keel demanda que el SGBD soporte de manera nativa las propiedades ACID (Atomicidad, Consistencia, Aislamiento y Durabilidad), asegurando que operaciones críticas —como la aprobación de una cotización, la reserva y descuento de repuestos del inventario, la emisión de una orden de servicio o la liquidación financiera con comprobantes de pago verificados— se ejecuten de forma íntegra o reviertan su estado ante cualquier falla del sistema. Asimismo, al tratarse de un modelo SaaS con proyección a escalar desde talleres y astilleros pequeños y medianos de la costa (como Refrymar Perú S.A.C.) hacia astilleros fluviales en la Amazonía y astilleros de gran envergadura (como SIMA Perú), el sistema gestor debe ofrecer capacidades de aislamiento multi-inquilino (multi-tenancy), seguridad a nivel de filas, mecanismos de respaldo continuo y herramientas de diagnóstico y administración que reduzcan los costos operativos de mantenimiento de infraestructura para la startup.
+
 ### 4.1.1. Evaluación y elección del sistema de gestión de base de datos relacional
 
-*[Comparar MySQL, SQL Server y Oracle según escalabilidad, rendimiento y compatibilidad. Incluir evidencia de la implementación del sistema elegido.]*
+Para seleccionar el sistema de gestión de base de datos relacional (RDBMS) idóneo para Keel, el equipo técnico de DALERST llevó a cabo una evaluación exhaustiva y fundamentada de los tres motores relacionales de mayor adopción en la industria de software empresarial: **MySQL**, **Microsoft SQL Server** y **Oracle Database**. Dicho análisis se realizó considerando las características técnicas, operativas y económicas del proyecto, estructurado bajo los criterios fundamentales exigidos para soluciones corporativas: **escalabilidad**, **rendimiento**, **compatibilidad y ecosistema**, **facilidad de administración y herramientas nativas**, y **costo total de propiedad (TCO) y viabilidad de licenciamiento**.
+
+#### Análisis comparativo de los sistemas candidatos
+
+##### 1. MySQL (versión 8.0 / 8.4 LTS - Oracle Corporation)
+
+MySQL es uno de los sistemas de gestión de bases de datos de código abierto más populares a nivel mundial, ampliamente implementado en aplicaciones web y arquitecturas basadas en microservicios.
+
+- **Escalabilidad:** Presenta un soporte consolidado para escalabilidad horizontal en lecturas mediante esquemas de replicación maestro-réplica (Primary-Replica) y soluciones de clustering como MySQL InnoDB Cluster y MySQL Group Replication. Sin embargo, para cargas de escritura masivas o arquitecturas multi-tenant complejas, requiere la implementación de capas externas de sharding (como Vitess o ProxySQL), lo cual incrementa la complejidad del despliegue y la lógica en la capa de aplicación. El particionamiento de tablas nativo cuenta con ciertas limitaciones en el manejo de claves foráneas y no soporta particionamiento de índices independientes de la clave primaria.
+- **Rendimiento:** Su motor transaccional por defecto, InnoDB, ofrece soporte completo de transacciones ACID, bloqueo a nivel de fila y control de concurrencia multiversión (MVCC). Presenta un excelente rendimiento en operaciones OLTP de lectura intensiva y transacciones sencillas de comercio electrónico. No obstante, en consultas analíticas de alta complejidad —que involucran uniones múltiples (JOINs) anidadas entre las 24 entidades del dominio naval de Keel, agregaciones con funciones de ventana y subconsultas correlacionadas sobre históricos de reparaciones—, su optimizador de costos suele generar planes de ejecución subóptimos en comparación con motores empresariales dedicados.
+- **Compatibilidad y ecosistema:** Destaca por su alta portabilidad multiplataforma, operando de manera nativa en distribuciones Linux, Windows, macOS y entornos basados en contenedores (Docker y Kubernetes). Posee conectores y soporte oficial para la totalidad de lenguajes de programación modernos (Node.js, TypeScript, C#, Python, Go, Java) y compatibilidad directa con los principales ORM (Prisma, TypeORM, Entity Framework Core, Sequelize). Su disponibilidad en la nube es universal (AWS RDS, Google Cloud SQL, Azure Database for MySQL).
+- **Herramientas de administración y limitaciones:** La herramienta gráfica oficial, MySQL Workbench, provee capacidades de administración, modelado y ejecución de scripts. No obstante, carece de un sistema integrado de diagnóstico en tiempo real tan profundo como SQL Server Profiler o Extended Events, y sus capacidades nativas de ingeniería inversa y diagramación visual presentan inestabilidades en esquemas relacionales con más de 20 tablas y múltiples restricciones circulares o de clave foránea.
+
+##### 2. Microsoft SQL Server (versión 2022 / 2025 - Microsoft Corporation)
+
+Microsoft SQL Server es un motor relacional empresarial de vanguardia, reconocido por su robustez transaccional, seguridad avanzada, herramientas de diagnóstico de primer nivel y su capacidad de integración nativa en nubes híbridas y servicios PaaS a través de Azure SQL.
+
+- **Escalabilidad:** Ofrece una escalabilidad vertical sobresaliente, capaz de aprovechar la totalidad de núcleos de CPU y memoria RAM asignados por el sistema operativo sin degradación de rendimiento. Para entornos de alta disponibilidad y recuperación ante desastres, cuenta con la tecnología de grupos de disponibilidad Always On (Always On Availability Groups), permitiendo conmutaciones por error automáticas (failover) y réplicas de solo lectura activas para desviar consultas analíticas e informes gerenciales. Asimismo, ofrece particionamiento nativo de tablas e índices sin restricciones foráneas complejas, y garantiza una ruta de migración transparente y sin fricciones hacia Azure SQL Database (Elastic Pools), permitiendo que Keel adopte un esquema multi-inquilino de costo eficiente conforme crezca la base de astilleros suscritos.
+- **Rendimiento:** Incorpora uno de los optimizadores de consultas basados en costos (CBO) más avanzados del mercado, con optimización adaptativa de consultas (Adaptive Query Processing) que ajusta los planes de ejecución en memoria basándose en el historial de cardinalidad en tiempo real. Dispone de soporte nativo para índices de almacenamiento en columnas agrupados y no agrupados (Columnstore Indexes), acelerando dramáticamente las consultas de agregación analítica sobre órdenes de trabajo, kardex de repuestos y costos operativos. Cuenta con tecnología In-Memory OLTP y el mecanismo de aislamiento *Read Committed Snapshot Isolation* (RCSI), el cual elimina los bloqueos y contenciones entre lecturas y escrituras: mientras el jefe técnico o el personal de administración genera reportes financieros, los técnicos en el muelle pueden registrar avances de trabajo y mediciones de pruebas desde sus dispositivos móviles sin experimentar demoras ni bloqueos mutuos (*deadlocks*).
+- **Compatibilidad y ecosistema:** Aunque históricamente estuvo ligado al ecosistema Windows, actualmente SQL Server opera de forma nativa y certificada sobre distribuciones corporativas de Linux (Ubuntu, Red Hat Enterprise Linux, SUSE) y contenedores Docker, lo que otorga total flexibilidad de despliegue en entornos de nube pública o privada. Cuenta con conectores nativos y controladores de alto desempeño para Node.js (`tedious`, `mssql`), C# (.NET 8/9 y Entity Framework Core), Python (`pyodbc`, `pymssql`, SQLAlchemy) y Java (JDBC). Su sintaxis procedimental T-SQL (Transact-SQL) es sumamente rica, ofreciendo soporte nativo para funciones analíticas de ventana, expresiones de tabla comunes (CTEs) recursivas, manejo estructurado de excepciones con bloques `TRY...CATCH` y manipulación directa de estructuras JSON para interoperar con interfaces web modernas.
+- **Herramientas de administración y modelado:** Dispone de **SQL Server Management Studio (SSMS 22)** y **Azure Data Studio**, consideradas el estándar de oro en herramientas de administración de bases de datos. SSMS integra un subsistema nativo de diagramación visual (*Database Diagrams*) que lee y escribe directamente sobre el catálogo del sistema (`sysdiagrams`), permitiendo inspeccionar, diseñar y exportar modelos físicos con relaciones de claves foráneas con precisión absoluta. Adicionalmente, incluye herramientas avanzadas de diagnóstico como Extended Events, planes de ejecución gráficos interactivos (Live Query Statistics), el optimizador Database Engine Tuning Advisor y el monitor de rendimiento SQL Server Profiler.
+- **Costos y licenciamiento:** Microsoft ofrece una estructura de licenciamiento idónea para empresas emergentes mediante **SQL Server Developer Edition**, la cual incluye el 100 % de las características avanzadas de la edición Enterprise de forma completamente gratuita para propósitos de desarrollo, diseño, modelado, implementación y pruebas de integración. Para despliegues productivos iniciales en clientes locales pequeños o entornos de prueba de concepto, la edición **SQL Server Express** es igualmente gratuita (con límites de 10 GB por base de datos, 1.4 GB de memoria y 4 núcleos, suficientes para talleres pequeños de acuerdo con el perfil identificado en la entrevista a Refrymar). Para el entorno productivo SaaS en la nube, Azure SQL Database ofrece esquemas de pago por uso (Serverless / vCore elásticos) con costos accesibles que escalan dinámicamente con la demanda del negocio.
+
+##### 3. Oracle Database (versión 21c / 23ai - Oracle Corporation)
+
+Oracle Database es el referente histórico indiscutible para sistemas transaccionales de misión crítica a nivel corporativo, bancario y gubernamental a gran escala.
+
+- **Escalabilidad:** Presenta la arquitectura de escalabilidad compartida (*shared-everything*) más avanzada del mercado mediante Oracle Real Application Clusters (RAC), permitiendo que múltiples servidores físicos compartan el acceso a una misma base de datos sin necesidad de particionar datos en la aplicación. Dispone de particionamiento avanzado multi-nivel (rango, lista, hash y compuesto), sharding nativo y réplicas de protección extrema con Oracle Active Data Guard.
+- **Rendimiento:** Su motor y optimizador basado en costos representan el punto más alto en optimización matemática de consultas, incorporando características de estadísticas adaptativas en tiempo real, compilación nativa de código PL/SQL a código máquina, compresión híbrida columnar (HCC) y gestión automatizada de memoria (AMM/ASMM).
+- **Compatibilidad y ecosistema:** Compatible con arquitecturas Linux, UNIX y Windows, soportando una amplia gama de herramientas corporativas y empresariales. Su lenguaje PL/SQL es sumamente potente y maduro.
+- **Limitaciones críticas para el contexto de Keel:** Presenta una curva de aprendizaje y complejidad administrativa extremadamente pronunciada, requiriendo administradores de bases de datos certificados y dedicados exclusivamente a su mantenimiento. Su instalación y configuración en entornos de desarrollo locales demanda una sobreasignación severa de recursos de hardware. Más determinante aún, su modelo de licenciamiento comercial presenta costos de decenas de miles de dólares por núcleo de procesador, resultando inviable e incoherente para la realidad financiera de una startup en fase de validación de mercado (DALERST) y para el segmento de pequeñas y medianas empresas navales al que se orienta el producto.
+
+#### Matriz de evaluación ponderada
+
+A fin de objetivar la toma de decisiones, se formuló una matriz de selección multicriterio ponderada, asignando pesos porcentuales basados en las prioridades estratégicas de DALERST:
+
+1. **Escalabilidad y arquitectura SaaS (20 %):** Capacidad del motor para crecer tanto vertical como horizontalmente, soportando el crecimiento modular y el aislamiento multi-inquilino de astilleros.
+2. **Rendimiento transaccional y optimización de consultas complejas (25 %):** Velocidad en transacciones ACID concurrentes (registro de avances, salidas de almacén, órdenes) y optimización en consultas multi-tabla para reportes de trazabilidad e informes técnicos.
+3. **Compatibilidad y ecosistema de desarrollo (20 %):** Soporte de lenguajes de programación modernos, ORMs, contenedores, nubes públicas y facilidad de integración con la arquitectura web de Keel.
+4. **Herramientas de administración, monitoreo y diagramación (15 %):** Disponibilidad y madurez de herramientas gráficas nativas para el modelado visual, diseño de esquemas físicos, diagramas ER, generación de métricas y afinamiento de consultas.
+5. **Costo total de propiedad (TCO) y viabilidad de licenciamiento (20 %):** Accesibilidad económica para la startup en fases de desarrollo, prototipado y despliegue productivo inicial sin comprometer la funcionalidad empresarial.
+
+La escala de evaluación cuantitativa empleada califica cada parámetro del 1 al 5, donde:
+- **1:** Deficiente / No cumple los requerimientos del proyecto.
+- **2:** Regular / Cumplimiento limitado con fricción operativa considerable.
+- **3:** Bueno / Cumple los requerimientos estándar del sector.
+- **4:** Muy bueno / Cumple ampliamente con ventajas técnicas apreciables.
+- **5:** Excelente / Sobresaliente, representa la mejor alternativa para el contexto evaluado.
+
+| Criterio de evaluación | Peso (%) | MySQL 8.0 / 8.4 | Microsoft SQL Server 2025 | Oracle Database 21c / 23ai |
+| :--- | :---: | :---: | :---: | :---: |
+| 1. Escalabilidad y arquitectura SaaS | 20 % | 3.5 | **4.5** | 5.0 |
+| 2. Rendimiento transaccional y analítico | 25 % | 3.5 | **4.5** | 5.0 |
+| 3. Compatibilidad y ecosistema | 20 % | 4.5 | **4.5** | 4.0 |
+| 4. Herramientas, monitoreo y diagramación nativa | 15 % | 3.0 | **5.0** | 3.5 |
+| 5. Costo total de propiedad (TCO) y licenciamiento | 20 % | 5.0 | **4.5** | 1.0 |
+| **Puntaje total ponderado** | **100 %** | **3.90** | **4.60** | **3.85** |
+
+*Cálculo matemático detallado:*
+- **MySQL:** $(3.5 \times 0.20) + (3.5 \times 0.25) + (4.5 \times 0.20) + (3.0 \times 0.15) + (5.0 \times 0.20) = 0.70 + 0.875 + 0.90 + 0.45 + 1.00 = \mathbf{3.90}$
+- **SQL Server:** $(4.5 \times 0.20) + (4.5 \times 0.25) + (4.5 \times 0.20) + (5.0 \times 0.15) + (4.5 \times 0.20) = 0.90 + 1.125 + 0.90 + 0.75 + 0.90 = \mathbf{4.60}$
+- **Oracle DB:** $(5.0 \times 0.20) + (5.0 \times 0.25) + (4.0 \times 0.20) + (3.5 \times 0.15) + (1.0 \times 0.20) = 1.00 + 1.250 + 0.80 + 0.525 + 0.20 = \mathbf{3.85}$
+
+#### Elección formal y justificación técnica
+
+A partir de la evaluación multicriterio, se determinó de manera unánime la elección de **Microsoft SQL Server** como el sistema de gestión de base de datos relacional oficial para la plataforma **Keel**. Las razones técnicas, operativas y de negocio que fundamentan esta decisión son las siguientes:
+
+1. **Garantía absoluta de consistencia transaccional y no bloqueo:** Los procesos de reparación naval evidenciados en la entrevista a Refrymar Perú S.A.C. exigen un control estricto de concurrencia: mientras el área administrativa consulta estados de cuenta y consolida informes técnicos de entrega, el personal técnico reporta avances desde muelles y el almacenero registra despachos de repuestos críticos (como componentes de refrigeración y gases refrigerantes). SQL Server, a través de *Read Committed Snapshot Isolation* (RCSI) y su optimizador adaptativo, previene bloqueos mutuos garantizando lecturas consistentes sin bloquear las escrituras concurrentes.
+2. **Entorno de administración y diagramación de clase mundial con SSMS:** SQL Server Management Studio (SSMS 22) proporciona la mejor experiencia de modelado, administración y diagnóstico relacional disponible en la industria. Su funcionalidad nativa de diagramas de base de datos (*Database Diagrams*) opera directamente sobre los metadatos del catálogo del motor, garantizando una fidelidad total e interactiva entre el esquema físico compilado y su representación gráfica, facilitando la auditoría de relaciones, claves primarias y foráneas.
+3. **Soporte avanzado para reglas de negocio complejas en T-SQL:** La lógica del dominio naval de Keel requiere el control de versiones de cotizaciones, trazabilidad de órdenes de compra con entregas parciales, y auditorías de seguridad SSOMA con registro de evidencias. T-SQL provee un lenguaje estructurado, robusto y eficiente para la definición de restricciones de integridad de dominio (`CHECK`), desencadenadores de auditoría y transacciones atómicas complejas.
+4. **Estrategia de costos óptima para el modelo SaaS de DALERST:** El uso de SQL Server Developer Edition durante la etapa de desarrollo y pruebas elimina por completo los costos de licenciamiento, otorgando acceso a todas las capacidades de la edición Enterprise. La ruta de escalamiento hacia la nube a través de Azure SQL Database ofrece un modelo de pago por uso altamente rentable y predecible, permitiendo a la startup iniciar operaciones con costos mínimos y escalar la infraestructura conforme se sumen nuevos astilleros a la plataforma.
+
+#### Evidencia de la implementación del sistema elegido
+
+Como evidencia de la implementación del SGBD relacional elegido, se verificó la disponibilidad operativa de la instancia instalada en el entorno local de desarrollo de DALERST. La base de datos física de Keel fue compilada bajo el identificador **`BD_Keel`**, empleando el juego de caracteres e intercalación **`Modern_Spanish_CI_AS`** (intercalación en español moderno, insensible a mayúsculas y minúsculas, sensible a acentos), adecuada para la nomenclatura técnica naval y la gestión documental del mercado peruano.
+
+A continuación, se detalla la ficha técnica del entorno de base de datos relacional verificado:
+
+| Parámetro técnico | Valor verificado en el entorno |
+| :--- | :--- |
+| **Motor de base de datos** | Microsoft SQL Server 2025 (RTM) - 17.0.1000.7 (X64) |
+| **Edición del motor** | Standard Developer Edition (64-bit) |
+| **Sistema operativo anfitrión** | Windows 10/11 Home Single Language (Build 26300, 64-bit) |
+| **Nombre del servidor / instancia** | `localhost` / `MSSQLSERVER` |
+| **Nombre de la base de datos** | `BD_Keel` |
+| **Intercalación (Collation)** | `Modern_Spanish_CI_AS` |
+| **Herramienta cliente de administración** | Microsoft SQL Server Management Studio (SSMS) v22.0 |
+| **Mecanismo de autenticación** | Windows Integrated Authentication (Seguridad integrada) |
+| **Estado del servicio** | En ejecución activa (Running) |
+
+La verificación de la versión del motor y del estado de la instancia se ejecutó mediante la utilidad de línea de comandos `sqlcmd`, confirmando la operatividad del servicio:
+
+```sql
+SELECT @@VERSION AS [Version_Instancia];
+```
+
+**Salida obtenida del motor:**
+```text
+Microsoft SQL Server 2025 (RTM) - 17.0.1000.7 (X64) 
+	Oct 21 2025 12:05:57 
+	Copyright (C) 2025 Microsoft Corporation
+	Standard Developer Edition (64-bit) on Windows 10 Home Single Language 10.0 <X64>
+```
+
+Asimismo, se ejecutó el script de creación y definición del esquema físico (`create_bd_keel.sql`), procediendo a auditar la existencia de los objetos relacionales creados mediante consultas directas sobre las vistas de catálogo del sistema de SQL Server:
+
+```sql
+USE BD_Keel;
+GO
+
+-- 1. Verificación del número de tablas de usuario creadas
+SELECT COUNT(*) AS [Total_Tablas_Fisicas] 
+FROM sys.tables 
+WHERE is_ms_shipped = 0;
+
+-- 2. Verificación del número de restricciones de clave foránea activas
+SELECT COUNT(*) AS [Total_Claves_Foraneas] 
+FROM sys.foreign_keys;
+```
+
+**Resultado de la consulta en el motor:**
+
+| Total_Tablas_Fisicas | Total_Claves_Foraneas |
+| :---: | :---: |
+| 24 | 45 |
+
+Los resultados confirman que las **24 tablas físicas** que componen la arquitectura de datos de Keel y las **45 restricciones de clave foránea** que garantizan la integridad referencial del sistema se encuentran plenamente compiladas, configuradas y operativas en el motor relacional Microsoft SQL Server.
 
 ### 4.1.2. Evaluación y elección del sistema de gestión de base de datos no relacional (TF1)
 
 ## 4.2. Diagramas de datos
 
+La diagramación de datos en la fase de implementación física permite traducir las abstracciones conceptuales y lógicas a una representación gráfica fidedigna de las estructuras de almacenamiento que residen en el motor de base de datos. En esta sección se presenta el modelo físico relacional de Keel, detallando su diccionario de datos, tipos físicos, restricciones de integridad referencial y visualización generada directamente desde el SGBD.
+
 ### 4.2.1. Diagrama entidad-relación físico
 
-*[Diagrama hecho con la extensión ERD Editor de Visual Studio Code: tablas, columnas, claves primarias y foráneas, restricciones.]*
+El **diagrama entidad-relación físico** materializa el modelo lógico desarrollado en la sección 3.3.1 en un esquema relacional ejecutable sobre Microsoft SQL Server. A diferencia del modelo lógico —que describe entidades, relaciones y atributos desde una perspectiva conceptual abstracta—, el modelo físico especifica con precisión matemática e ingenieril los nombres técnicos de tablas y columnas (empleando la convención uniforme `snake_case`), los tipos de datos nativos del motor, la longitud, precisión y escala de cada atributo, los mecanismos de generación automática de claves primarias artificiales (`IDENTITY`), la nulabilidad estricta de columnas obligatorias y opcionales, las restricciones de verificación de dominio (`CHECK`), las restricciones de unicidad (`UNIQUE`), los valores por defecto (`DEFAULT`), y las reglas de integridad referencial con sus respectivas acciones ante operaciones de borrado (`ON DELETE`) y actualización (`ON UPDATE`).
+
+#### Criterios de diseño y transformación al modelo físico
+
+1. **Estrategia de claves primarias artificiales (Surrogate Keys):** Para garantizar un rendimiento óptimo en operaciones de indexación y uniones relacionales (`JOINs`), todas las tablas maestras y transaccionales implementan una clave primaria subrogada de tipo entero autoincremental (`INT IDENTITY(1,1)`). Esta estrategia optimiza la utilización de memoria en los índices agrupados (*Clustered Indexes*), evita la propagación de claves naturales de longitud variable hacia tablas hijas y desvincula la integridad del sistema de eventuales cambios en identificadores comerciales o normativos.
+2. **Claves primarias compuestas naturales:** En tablas de resolución asociativa muchos a muchos (M:N) con fuerte semántica relacional —específicamente `participacion_trabajo`—, se definió una clave primaria compuesta agrupada formada por el par `(id_trabajo, id_empleado)`. Esta estructura previene a nivel físico la asignación duplicada de un mismo técnico a un trabajo específico, garantizando atomicidad sin requerir índices únicos redundantes.
+3. **Definición rigurosa de tipos de datos y dominios:**
+   - **Cadenas de caracteres de longitud fija (`CHAR`):** Se utilizó `CHAR(11)` para números de RUC de clientes y proveedores, y `CHAR(8)` para el Documento Nacional de Identidad (DNI) de los empleados. Al tener una longitud inmutable definida por las entidades gubernamentales del Perú (SUNAT y RENIEC), el tipo `CHAR` previene fragmentación de páginas y sobrecarga de punteros de longitud variable.
+   - **Cadenas de caracteres de longitud variable (`VARCHAR`):** Empleado en nombres, razones sociales, descripciones cortas, correos electrónicos y códigos de matrícula naval (`VARCHAR(30)` a `VARCHAR(255)`), optimizando el espacio físico en disco al almacenar únicamente los bytes reales utilizados.
+   - **Campos de texto enriquecido y observaciones extensas (`VARCHAR(MAX)`):** Aplicado en campos de alcance técnico abierto, diagnósticos, observaciones de inspecciones, hallazgos de seguridad SSOMA e informes técnicos. Permite almacenar hasta 2 GB por registro, almacenando datos fuera de fila (*out-of-row*) únicamente cuando el texto supera el umbral de página de 8 KB, preservando la eficiencia de escaneo de la tabla.
+   - **Precisión numérica y valores monetarios (`DECIMAL`):** En estricta conformidad con las mejores prácticas financieras y operativas, se descartó el uso de tipos de coma flotante inexactos (`FLOAT`, `REAL`). Se implementó `DECIMAL(12,2)` para importes monetarios (subtotales, IGV, totales de cotizaciones, pagos y órdenes de compra), asegurando exactitud de hasta centésimos de sol o dólar sin errores de redondeo binario. Para cantidades de inventario, horas de trabajo y mediciones físicas de parámetros navales, se configuró `DECIMAL(10,2)` o `DECIMAL(6,2)` según el orden de magnitud requerido.
+   - **Valores temporales y fechas:** Se adoptó `DATE` para fechas de calendario puras (emisión, vigencia, inicio previsto, entrega) sin componente horario, ahorrando espacio de almacenamiento (3 bytes por fila). Para registros de auditoría y reportes en tiempo real que requieren marca de tiempo precisa, se utilizó `DATETIME2(0)` (5 bytes de almacenamiento, precisión de segundos enteros), eliminando la ambigüedad histórica del tipo heredado `DATETIME`.
+   - **Indicadores booleanos:** Representados mediante el tipo nativo `BIT` (1 para verdadero, 0 para falso), optimizado internamente por SQL Server agrupando hasta 8 columnas `BIT` en un solo byte físico de página.
+4. **Política de nulabilidad estricta:** Todas las columnas indispensables para la existencia lógica de un registro fueron catalogadas como `NOT NULL`. La presencia de valores `NULL` quedó estrictamente restringida a estados temporales naturales del ciclo de vida del negocio: fechas de cierre de órdenes en curso, cotizaciones aún no aprobadas, trabajos sin dependencias previas o evidencias pendientes de resolución.
+
+#### Diccionario de datos físico de las 24 tablas
+
+A continuación, se detalla la especificación formal de las 24 tablas físicas compiladas en la base de datos `BD_Keel`, organizadas conforme a los módulos funcionales del sistema.
+
+##### Módulo 1: Clientes, Embarcaciones y Solicitudes de Servicio
+
+###### 1. Tabla: `cliente`
+Almacena las empresas navieras, pesqueras y armadores que contratan los servicios de reparación.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_cliente` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador único del cliente. |
+| `razon_social` | `VARCHAR(150)` | No | | | Nombre legal o razón social de la empresa. |
+| `ruc` | `CHAR(11)` | No | UQ | `UNIQUE`, `CHECK (LEN(ruc)=11 AND ruc NOT LIKE '%[^0-9]%')` | Número de RUC oficial de 11 dígitos numéricos exactos. |
+| `direccion` | `VARCHAR(200)` | No | | | Domicilio fiscal o legal de la empresa. |
+| `telefono` | `VARCHAR(20)` | No | | | Teléfono de contacto institucional. |
+| `correo` | `VARCHAR(100)` | No | | | Correo electrónico principal de notificaciones. |
+
+###### 2. Tabla: `representante`
+Registra a las personas autorizadas por el cliente para coordinar y aprobar decisiones técnicas y económicas.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_representante` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador único del representante. |
+| `id_cliente` | `INT` | No | FK | `REFERENCES cliente(id_cliente)` | Empresa cliente a la que representa. |
+| `nombres` | `VARCHAR(100)` | No | | | Nombres del representante. |
+| `apellidos` | `VARCHAR(100)` | No | | | Apellidos del representante. |
+| `cargo` | `VARCHAR(100)` | No | | | Cargo ocupado en la empresa cliente. |
+| `telefono` | `VARCHAR(20)` | No | | | Teléfono de contacto directo. |
+| `correo` | `VARCHAR(100)` | No | | | Correo corporativo del representante. |
+| `fecha_inicio` | `DATE` | No | | | Fecha de inicio de representación. |
+| `fecha_fin` | `DATE` | Sí | | `CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio)` | Fecha de cese; nulo si está activo. |
+
+###### 3. Tabla: `embarcacion`
+Contiene los datos técnicos de identificación de las naves que reciben servicios en taller o astillero.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_embarcacion` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador único de la embarcación. |
+| `id_cliente` | `INT` | No | FK | `REFERENCES cliente(id_cliente)` | Propietario o empresa armadora contratante. |
+| `nombre` | `VARCHAR(100)` | No | | | Nombre comercial o de registro de la nave. |
+| `matricula` | `VARCHAR(30)` | No | UQ | `UNIQUE` | Matrícula de registro ante la Capitanía de Puerto. |
+| `tipo` | `VARCHAR(50)` | No | | | Tipo de embarcación (pesquera, remolcador, barcaza). |
+| `puerto_base` | `VARCHAR(100)` | No | | | Puerto de fondeo u operación habitual (Callao, Chimbote). |
+
+###### 4. Tabla: `equipo`
+Identifica los sistemas y equipos específicos a bordo que son objeto de intervención y mantenimiento.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_equipo` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador único del equipo intervenido. |
+| `id_embarcacion` | `INT` | No | FK | `REFERENCES embarcacion(id_embarcacion)` | Nave donde se ubica instalado el sistema. |
+| `tipo_equipo` | `VARCHAR(100)` | No | | | Sistema (compresor de refrigeración, evaporador, etc.). |
+| `marca` | `VARCHAR(100)` | No | | | Fabricante del equipo (Mycom, Sabroe, Carrier). |
+| `modelo` | `VARCHAR(100)` | No | | | Modelo comercial del sistema. |
+| `numero_serie` | `VARCHAR(100)` | Sí | | | Número de serie industrial de fábrica. |
+| `ubicacion_a_bordo` | `VARCHAR(150)` | No | | | Sala de máquinas, bodega frigorífica o cubierta. |
+| `refrigerante` | `VARCHAR(50)` | No | | | Tipo de refrigerante utilizado (Amoniaco R-717, R-507, etc.). |
+
+###### 5. Tabla: `solicitud`
+Registra el requerimiento de servicio inicial emitido por el cliente ante una avería o programa preventivo.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_solicitud` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador de la solicitud. |
+| `id_cliente` | `INT` | No | FK | `REFERENCES cliente(id_cliente)` | Empresa cliente que solicita el servicio. |
+| `id_representante` | `INT` | No | FK | `REFERENCES representante(id_representante)` | Representante que suscribe la solicitud. |
+| `id_embarcacion` | `INT` | No | FK | `REFERENCES embarcacion(id_embarcacion)` | Nave sobre la que se reporta el incidente. |
+| `fecha_recepcion` | `DATETIME2(0)` | No | | `DEFAULT SYSDATETIME()` | Momento exacto de recepción de la solicitud. |
+| `canal` | `VARCHAR(50)` | No | | `CHECK (canal IN ('Correo','Telefono','Presencial','WhatsApp','Plataforma Web'))` | Medio formal de ingreso del pedido. |
+| `problema_reportado`| `VARCHAR(MAX)` | No | | | Descripción del problema o falla según el cliente. |
+| `urgencia` | `VARCHAR(20)` | No | | `CHECK (urgencia IN ('Baja','Media','Alta','Critica'))` | Nivel de prioridad operativa. |
+| `estado` | `VARCHAR(30)` | No | | `DEFAULT 'Recibida'`, `CHECK (estado IN ('Recibida','Inspeccionada','Cotizada','Aprobada','Archivada'))` | Fase actual en el embudo de atención. |
+
+###### 6. Tabla: `inspeccion`
+Documenta la revisión técnica preliminar a bordo efectuada por un especialista antes de la cotización formal.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_inspeccion` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador de la inspección técnica. |
+| `id_solicitud` | `INT` | No | FK | `REFERENCES solicitud(id_solicitud)` | Solicitud que genera la inspección. |
+| `id_empleado` | `INT` | No | FK | `REFERENCES empleado(id_empleado)` | Inspector técnico comisionado a la nave. |
+| `fecha` | `DATE` | No | | | Fecha en que se efectuó la inspección a bordo. |
+| `observaciones` | `VARCHAR(MAX)` | No | | | Hallazgos visuales y mecánicos detectados. |
+| `mediciones` | `VARCHAR(MAX)` | Sí | | | Parámetros preliminares (temperatura, presiones, fugas). |
+| `alcance_inicial` | `VARCHAR(MAX)` | No | | | Lista de trabajos recomendados a cotizar. |
+| `costo` | `DECIMAL(10,2)` | No | | `DEFAULT 0.00`, `CHECK (costo >= 0)` | Costo pactado por la visita de inspección previa. |
+
+##### Módulo 2: Comercialización y Presupuestos
+
+###### 7. Tabla: `cotizacion`
+Registra la propuesta económica formal enviada al cliente, permitiendo el control estricto de versiones y cotizaciones adicionales surgidas durante la ejecución de obra.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_cotizacion` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador único de la cotización. |
+| `id_solicitud` | `INT` | No | FK | `REFERENCES solicitud(id_solicitud)` | Solicitud asociada que origina la propuesta. |
+| `id_orden` | `INT` | Sí | FK | `REFERENCES orden_servicio(id_orden)` | Orden de servicio vinculada (si es un trabajo adicional). |
+| `id_representante_aprueba` | `INT` | Sí | FK | `REFERENCES representante(id_representante)` | Representante del cliente que autorizó la versión. |
+| `numero` | `VARCHAR(30)` | No | | | Código correlativo de cotización (ej. `COT-2026-0042`). |
+| `version` | `INT` | No | | `DEFAULT 1`, `CHECK (version >= 1)` | Número de versión secuencial (1, 2, 3...). |
+| `tipo` | `VARCHAR(30)` | No | | `DEFAULT 'Principal'`, `CHECK (tipo IN ('Principal','Adicional'))` | Propuesta inicial o alcance nuevo derivado de hallazgos. |
+| `fecha_emision` | `DATE` | No | | | Fecha en que se emite la propuesta. |
+| `moneda` | `CHAR(3)` | No | | `CHECK (moneda IN ('PEN','USD'))` | Moneda pactada (Soles o Dólares Americanos). |
+| `subtotal` | `DECIMAL(12,2)` | No | | `CHECK (subtotal >= 0)` | Importe monetario base sin impuestos. |
+| `igv` | `DECIMAL(12,2)` | No | | `CHECK (igv >= 0)` | Monto correspondiente al 18 % de IGV de ley. |
+| `total` | `DECIMAL(12,2)` | No | | `CHECK (total >= 0)` | Monto final facturable de la propuesta. |
+| `plazo_dias` | `INT` | No | | `CHECK (plazo_dias > 0)` | Tiempo estimado de ejecución en días calendario. |
+| `fecha_vigencia` | `DATE` | No | | | Fecha de caducidad comercial de los precios. |
+| `condiciones` | `VARCHAR(MAX)` | No | | | Condiciones de pago, garantías y exclusiones. |
+| `archivo_pdf` | `VARCHAR(255)` | Sí | | | Ruta o URL de almacenamiento del documento formal. |
+| `estado` | `VARCHAR(30)` | No | | `DEFAULT 'Borrador'`, `CHECK (estado IN ('Borrador','Enviada','Aprobada','Rechazada','Vencida','Archivada'))` | Estado comercial de la versión. |
+| `fecha_aprobacion` | `DATE` | Sí | | | Fecha formal en que el cliente dio su visto bueno. |
+| `evidencia_aprobacion`| `VARCHAR(255)`| Sí | | | Documento de sustento de la aprobación (correo, carta). |
+
+*Restricción de unicidad compuesta:* `CONSTRAINT uq_cotizacion_num_ver UNIQUE (numero, version)`. Garantiza que no existan dos registros con el mismo código de cotización y número de versión.
+
+###### 8. Tabla: `detalle_cotizacion`
+Desglosa cada una de las partidas presupuestarias (mano de obra, repuestos, suministros, gases, traslados) que conforman el total de la cotización.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_detalle` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador de la partida. |
+| `id_cotizacion` | `INT` | No | FK | `REFERENCES cotizacion(id_cotizacion) ON DELETE CASCADE` | Cotización padre a la que pertenece la línea. |
+| `id_articulo` | `INT` | Sí | FK | `REFERENCES articulo(id_articulo)` | Artículo de almacén vinculado (si aplica suministro de stock). |
+| `concepto` | `VARCHAR(50)` | No | | `CHECK (concepto IN ('Mano de obra','Repuesto','Material','Gas','Traslado','Otros'))` | Clasificación presupuestaria de la partida. |
+| `descripcion` | `VARCHAR(255)` | No | | | Detalle específico de la tarea o insumo cotizado. |
+| `cantidad` | `DECIMAL(10,2)` | No | | `CHECK (cantidad > 0)` | Volumen o número de unidades presupuestadas. |
+| `unidad` | `VARCHAR(30)` | No | | | Unidad de medida (horas, kilogramos, unidades, juegos). |
+| `precio_unitario` | `DECIMAL(10,2)` | No | | `CHECK (precio_unitario >= 0)` | Precio unitario cotizado al cliente. |
+| `subtotal` | `DECIMAL(12,2)` | No | | `CHECK (subtotal >= 0)` | Importe total calculado (`cantidad * precio_unitario`). |
+
+##### Módulo 3: Operaciones Técnicas y Ejecución de Trabajos
+
+###### 9. Tabla: `orden_servicio`
+Representa el contrato de ejecución técnica abierto en astillero o taller a partir de una cotización aprobada.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_orden` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador único de la orden de servicio. |
+| `id_cotizacion` | `INT` | No | FK | `REFERENCES cotizacion(id_cotizacion)` | Cotización base que originó la orden. |
+| `id_embarcacion` | `INT` | No | FK | `REFERENCES embarcacion(id_embarcacion)` | Embarcación en proceso de reparación. |
+| `id_jefe_tecnico` | `INT` | No | FK | `REFERENCES empleado(id_empleado)` | Ingeniero o jefe técnico responsable del proyecto. |
+| `numero` | `VARCHAR(30)` | No | UQ | `UNIQUE` | Código correlativo de la orden (ej. `OS-2026-0018`). |
+| `fecha_apertura` | `DATE` | No | | | Fecha de apertura e inicio de actividades. |
+| `fecha_cierre` | `DATE` | Sí | | `CHECK (fecha_cierre IS NULL OR fecha_cierre >= fecha_apertura)` | Fecha de cierre definitivo del servicio. |
+| `estado` | `VARCHAR(30)` | No | | `DEFAULT 'Abierta'`, `CHECK (estado IN ('Abierta','En ejecucion','En pruebas','Entregada','Pagada','Cerrada'))` | Estado del ciclo de vida del servicio naval. |
+| `condiciones_garantia`| `VARCHAR(MAX)`| Sí | | | Términos y alcances de la garantía otorgada. |
+| `fecha_fin_garantia` | `DATE` | Sí | | | Fecha de vencimiento de la garantía técnica. |
+
+###### 10. Tabla: `trabajo`
+Subdivide el alcance de la orden de servicio en tareas técnicas específicas asignadas a un especialista responsable.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_trabajo` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador del trabajo técnico. |
+| `id_orden` | `INT` | No | FK | `REFERENCES orden_servicio(id_orden)` | Orden de servicio contenedora. |
+| `id_responsable` | `INT` | No | FK | `REFERENCES empleado(id_empleado)` | Técnico líder a cargo de la ejecución. |
+| `id_trabajo_previo`| `INT` | Sí | FK | `REFERENCES trabajo(id_trabajo)` | Trabajo predecesor inmediato en la ruta crítica. |
+| `descripcion` | `VARCHAR(MAX)` | No | | | Detalle del trabajo (desmontaje de compresor, etc.). |
+| `especialidad` | `VARCHAR(100)` | No | | | Disciplina técnica (refrigeración, mecánica, electricidad). |
+| `fecha_inicio_prevista`| `DATE` | No | | | Inicio programado por el jefe técnico. |
+| `fecha_fin_prevista` | `DATE` | No | | `CHECK (fecha_fin_prevista >= fecha_inicio_prevista)` | Conclusión prevista de la tarea. |
+| `fecha_inicio_real` | `DATE` | Sí | | | Fecha real de inicio de actividades. |
+| `fecha_fin_real` | `DATE` | Sí | | `CHECK (fecha_fin_real IS NULL OR fecha_inicio_real IS NULL OR fecha_fin_real >= fecha_inicio_real)` | Conclusión efectiva de la tarea. |
+| `estado` | `VARCHAR(30)` | No | | `DEFAULT 'Pendiente'`, `CHECK (estado IN ('Pendiente','En ejecucion','En espera','En pruebas','Terminado'))` | Estado operativo del trabajo. |
+| `motivo_espera` | `VARCHAR(255)` | Sí | | | Causa de detención (falta repuesto, puerto cerrado). |
+
+###### 11. Tabla: `empleado`
+Catálogo del personal técnico, operativo, logístico y administrativo de la empresa reparadora.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_empleado` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador único del empleado. |
+| `nombres` | `VARCHAR(100)` | No | | | Nombres del trabajador. |
+| `apellidos` | `VARCHAR(100)` | No | | | Apellidos del trabajador. |
+| `dni` | `CHAR(8)` | No | UQ | `UNIQUE`, `CHECK (LEN(dni)=8 AND dni NOT LIKE '%[^0-9]%')` | Documento Nacional de Identidad de 8 dígitos numéricos. |
+| `rol` | `VARCHAR(50)` | No | | `CHECK (rol IN ('Operaciones','Jefe Tecnico','Tecnico','Almacen','Compras','SSOMA','Administracion'))` | Rol funcional en la estructura de la empresa. |
+| `especialidad` | `VARCHAR(100)` | Sí | | | Área técnica de pericia (refrigeración industrial, soldadura). |
+| `telefono` | `VARCHAR(20)` | No | | | Teléfono de contacto móvil para alertas. |
+| `activo` | `BIT` | No | | `DEFAULT 1` | Indicador de vigencia laboral en la empresa. |
+
+###### 12. Tabla: `participacion_trabajo`
+Entidad asociativa que registra la asignación de técnicos de apoyo a cada trabajo y el control de horas dedicadas.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_trabajo` | `INT` | No | PK, FK | `REFERENCES trabajo(id_trabajo) ON DELETE CASCADE` | Trabajo técnico asignado. |
+| `id_empleado` | `INT` | No | PK, FK | `REFERENCES empleado(id_empleado)` | Técnico participante. |
+| `funcion` | `VARCHAR(50)` | No | | `CHECK (funcion IN ('Responsable','Apoyo'))` | Función asignada en la tarea. |
+| `horas_trabajadas`| `DECIMAL(6,2)` | No | | `DEFAULT 0.00`, `CHECK (horas_trabajadas >= 0)` | Horas hombre efectivas consumidas en el trabajo. |
+
+###### 13. Tabla: `avance_trabajo`
+Registra los reportes periódicos de progreso físico emitidos por los técnicos en campo desde sus dispositivos móviles.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_avance` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador del informe de avance. |
+| `id_trabajo` | `INT` | No | FK | `REFERENCES trabajo(id_trabajo) ON DELETE CASCADE` | Trabajo técnico sobre el que se reporta. |
+| `id_empleado` | `INT` | No | FK | `REFERENCES empleado(id_empleado)` | Técnico que suscribe el reporte. |
+| `fecha_hora` | `DATETIME2(0)` | No | | `DEFAULT SYSDATETIME()` | Momento cronológico exacto del reporte. |
+| `descripcion` | `VARCHAR(MAX)` | No | | | Detalle de las actividades ejecutadas o hallazgos. |
+| `estado_reportado`| `VARCHAR(30)` | No | | | Estado del trabajo declarado en dicho instante. |
+| `porcentaje_avance`| `DECIMAL(5,2)` | No | | `CHECK (porcentaje_avance BETWEEN 0 AND 100)` | Porcentaje de avance físico estimado (0 a 100 %). |
+
+##### Módulo 4: Logística, Almacén y Compras
+
+###### 14. Tabla: `articulo`
+Catálogo maestro de repuestos navales, consumibles, herramientas y gases refrigerantes custodiados en almacén.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_articulo` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador del artículo. |
+| `codigo` | `VARCHAR(30)` | No | UQ | `UNIQUE` | Código de inventario interno o SKU. |
+| `descripcion` | `VARCHAR(200)` | No | | | Descripción técnica detallada del repuesto o material. |
+| `tipo` | `VARCHAR(50)` | No | | `CHECK (tipo IN ('Repuesto','Material','Herramienta','Gas'))` | Clasificación física del artículo. |
+| `unidad` | `VARCHAR(30)` | No | | | Unidad de medida (unidades, galones, balones, kg). |
+| `ubicacion` | `VARCHAR(100)` | No | | | Pasillo, anaquel o bodega de almacenamiento físico. |
+| `stock_actual` | `DECIMAL(10,2)` | No | | `DEFAULT 0.00`, `CHECK (stock_actual >= 0)` | Existencias físicas reales disponibles. |
+| `stock_minimo` | `DECIMAL(10,2)` | No | | `DEFAULT 0.00`, `CHECK (stock_minimo >= 0)` | Umbral de alerta para reposición de compras. |
+| `precio_unitario`| `DECIMAL(10,2)` | No | | `CHECK (precio_unitario >= 0)` | Costo unitario de reposición referencial. |
+
+###### 15. Tabla: `movimiento_almacen`
+Kardex transaccional que registra las salidas a obra, devoluciones de sobrantes, préstamos de herramientas y ajustes de inventario.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_movimiento` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador del movimiento de inventario. |
+| `id_articulo` | `INT` | No | FK | `REFERENCES articulo(id_articulo)` | Artículo movilizado. |
+| `id_trabajo` | `INT` | Sí | FK | `REFERENCES trabajo(id_trabajo)` | Trabajo destino del consumo o procedencia del sobrante. |
+| `id_empleado` | `INT` | No | FK | `REFERENCES empleado(id_empleado)` | Persona que despacha, recibe o custodia el insumo. |
+| `id_detalle_compra`| `INT` | Sí | FK | `REFERENCES detalle_compra(id_detalle_compra)` | Línea de compra de origen (si es un ingreso por compra). |
+| `tipo` | `VARCHAR(30)` | No | | `CHECK (tipo IN ('Salida','Devolucion','Prestamo','Ingreso','Ajuste'))` | Tipo de movimiento en el kardex físico. |
+| `cantidad` | `DECIMAL(10,2)` | No | | `CHECK (cantidad > 0)` | Volumen físico del movimiento. |
+| `fecha` | `DATETIME2(0)` | No | | `DEFAULT SYSDATETIME()` | Momento de la operación de almacén. |
+| `fecha_devolucion_prevista`| `DATE` | Sí | | | Fecha prevista de reintegro (para herramientas). |
+| `observacion` | `VARCHAR(MAX)` | Sí | | | Justificación técnica o notas de inspección física. |
+
+###### 16. Tabla: `proveedor`
+Directorio de empresas comerciales proveedoras de repuestos marítimos, gases refrigerantes y servicios tercerizados.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_proveedor` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador del proveedor. |
+| `razon_social` | `VARCHAR(150)` | No | | | Nombre legal o razón social de la empresa proveedora. |
+| `ruc` | `CHAR(11)` | No | UQ | `UNIQUE`, `CHECK (LEN(ruc)=11 AND ruc NOT LIKE '%[^0-9]%')` | RUC oficial de 11 dígitos numéricos exactos. |
+| `contacto` | `VARCHAR(100)` | No | | | Nombre del asesor comercial asignado. |
+| `telefono` | `VARCHAR(20)` | No | | | Teléfono de contacto de compras. |
+| `correo` | `VARCHAR(100)` | No | | | Correo electrónico de envío de órdenes de compra. |
+
+###### 17. Tabla: `orden_compra`
+Documenta los pedidos de abastecimiento formalizados con proveedores cuando se detecta escasez de repuestos o materiales.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_compra` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador de la orden de compra. |
+| `id_proveedor` | `INT` | No | FK | `REFERENCES proveedor(id_proveedor)` | Proveedor adjudicado. |
+| `id_trabajo` | `INT` | Sí | FK | `REFERENCES trabajo(id_trabajo)` | Trabajo que motivó la adquisición de emergencia. |
+| `id_empleado` | `INT` | No | FK | `REFERENCES empleado(id_empleado)` | Encargado del área de compras que emite la orden. |
+| `fecha_pedido` | `DATE` | No | | | Fecha de emisión de la orden de compra. |
+| `estado` | `VARCHAR(30)` | No | | `DEFAULT 'Solicitada'`, `CHECK (estado IN ('Solicitada','Recibida parcialmente','Recibida','Anulada'))` | Estado del abastecimiento logístico. |
+| `total` | `DECIMAL(12,2)` | No | | `DEFAULT 0.00`, `CHECK (total >= 0)` | Importe total pactado con el proveedor. |
+
+###### 18. Tabla: `detalle_compra`
+Líneas de artículos solicitados en una orden de compra, controlando recepciones parciales y condiciones de entrega física.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_detalle_compra`| `INT IDENTITY(1,1)`| No | PK | `PRIMARY KEY CLUSTERED` | Identificador de la partida de compra. |
+| `id_compra` | `INT` | No | FK | `REFERENCES orden_compra(id_compra) ON DELETE CASCADE` | Orden de compra contenedora. |
+| `id_articulo` | `INT` | No | FK | `REFERENCES articulo(id_articulo)` | Artículo de almacén solicitado. |
+| `cantidad_pedida` | `DECIMAL(10,2)` | No | | `CHECK (cantidad_pedida > 0)` | Volumen de insumos solicitados. |
+| `cantidad_recibida`| `DECIMAL(10,2)` | No | | `DEFAULT 0.00`, `CHECK (cantidad_recibida >= 0)` | Volumen ingresado físicamente al almacén. |
+| `precio_unitario` | `DECIMAL(10,2)` | No | | `CHECK (precio_unitario >= 0)` | Precio unitario facturado por el proveedor. |
+| `fecha_recepcion` | `DATE` | Sí | | | Fecha de la última recepción física en almacén. |
+| `condicion_recepcion`| `VARCHAR(255)`| Sí | | | Estado del material (conforme, empaque dañado, etc.). |
+
+##### Módulo 5: Calidad, Seguridad SSOMA, Cierre y Finanzas
+
+###### 19. Tabla: `prueba`
+Registra las pruebas de validación técnica de funcionamiento a bordo (presión de succión, descarga, temperatura de cámaras frigoríficas, hermeticidad).
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_prueba` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador de la prueba técnica. |
+| `id_trabajo` | `INT` | No | FK | `REFERENCES trabajo(id_trabajo) ON DELETE CASCADE` | Trabajo técnico validado por la prueba. |
+| `id_empleado` | `INT` | No | FK | `REFERENCES empleado(id_empleado)` | Técnico responsable de la medición. |
+| `tipo_prueba` | `VARCHAR(100)` | No | | | Tipo de prueba (prueba de funcionamiento en muelle, vacío). |
+| `parametro` | `VARCHAR(100)` | No | | | Parámetro medido (presión alta/baja, temperatura). |
+| `valor_medido` | `DECIMAL(10,2)` | No | | | Magnitud cuantitativa obtenida en los instrumentos. |
+| `unidad` | `VARCHAR(30)` | No | | | Unidad de medida (PSI, bar, °C, RPM). |
+| `valor_minimo` | `DECIMAL(10,2)` | No | | | Límite inferior admisible por el fabricante. |
+| `valor_maximo` | `DECIMAL(10,2)` | No | | | Límite superior admisible por el fabricante. |
+| `resultado` | `VARCHAR(20)` | No | | `CHECK (resultado IN ('Conforme','No conforme'))` | Evaluación técnica del parámetro medido. |
+| `numero_intento` | `INT` | No | | `DEFAULT 1`, `CHECK (numero_intento >= 1)` | Correlativo del ensayo en caso de reintentos por falla. |
+| `fecha` | `DATE` | No | | | Fecha de realización del protocolo de pruebas. |
+
+###### 20. Tabla: `observacion_ssoma`
+Registra los controles de seguridad y salud en el trabajo, identificación de peligros (fugas de amoniaco, trabajos en caliente) e incidentes en obra.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_observacion` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador de la anotación de seguridad. |
+| `id_orden` | `INT` | No | FK | `REFERENCES orden_servicio(id_orden)` | Orden de servicio sujeta a fiscalización. |
+| `id_trabajo` | `INT` | Sí | FK | `REFERENCES trabajo(id_trabajo)` | Trabajo específico asociado al riesgo (si aplica). |
+| `id_responsable` | `INT` | No | FK | `REFERENCES empleado(id_empleado)` | Inspector o supervisor de SSOMA en la nave. |
+| `fecha` | `DATE` | No | | | Fecha de la inspección de seguridad. |
+| `momento` | `VARCHAR(20)` | No | | `CHECK (momento IN ('Antes','Durante','Despues'))` | Etapa operativa en que se evalúa la condición. |
+| `tipo` | `VARCHAR(30)` | No | | `CHECK (tipo IN ('Control','Observacion','Incidente'))` | Naturaleza del hallazgo de seguridad. |
+| `riesgo` | `VARCHAR(150)` | No | | | Riesgo mitigado (fuga amoniaco, corte, espacio confinado). |
+| `descripcion` | `VARCHAR(MAX)` | No | | | Detalle circunstancial de la condición observada. |
+| `accion_requerida` | `VARCHAR(MAX)` | No | | | Medida preventiva o correctiva de cumplimiento obligatorio. |
+| `estado` | `VARCHAR(20)` | No | | `DEFAULT 'Abierta'`, `CHECK (estado IN ('Abierta','Cerrada'))` | Estado de subsanación de la medida de seguridad. |
+
+###### 21. Tabla: `evidencia`
+Centraliza los enlaces a archivos digitales (fotografías, certificados de calibración, capturas de pantalla, actas) que respaldan las diferentes etapas de la reparación.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_evidencia` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador del registro de evidencia. |
+| `id_inspeccion` | `INT` | Sí | FK | `REFERENCES inspeccion(id_inspeccion)` | Inspección previa respaldada por la evidencia. |
+| `id_avance` | `INT` | Sí | FK | `REFERENCES avance_trabajo(id_avance)` | Avance de obra respaldado fotográficamente. |
+| `id_prueba` | `INT` | Sí | FK | `REFERENCES prueba(id_prueba)` | Prueba técnica sustentada con lectura de instrumentos. |
+| `id_observacion` | `INT` | Sí | FK | `REFERENCES observacion_ssoma(id_observacion)` | Condición de seguridad respaldada documentalmente. |
+| `tipo` | `VARCHAR(30)` | No | | `CHECK (tipo IN ('Fotografia','Documento','Medicion'))` | Naturaleza del archivo multimedia. |
+| `archivo_url` | `VARCHAR(255)` | No | | | URL o ruta de almacenamiento seguro en la nube. |
+| `descripcion` | `VARCHAR(255)` | No | | | Leyenda explicativa de lo mostrado en la evidencia. |
+| `fecha` | `DATETIME2(0)` | No | | `DEFAULT SYSDATETIME()` | Fecha y hora de captura o subida del archivo. |
+
+###### 22. Tabla: `informe_tecnico`
+Consolida el documento técnico oficial emitido por el jefe técnico a la conclusión de los trabajos para la entrega formal de la embarcación.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_informe` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador del informe técnico. |
+| `id_orden` | `INT` | No | FK | `REFERENCES orden_servicio(id_orden)` | Orden de servicio sobre la que se rinde cuentas. |
+| `id_jefe_tecnico` | `INT` | No | FK | `REFERENCES empleado(id_empleado)` | Jefe técnico que suscribe el informe de entrega. |
+| `fecha_emision` | `DATE` | No | | | Fecha de emisión formal del documento. |
+| `problema_inicial`| `VARCHAR(MAX)` | No | | | Resumen del daño o avería original reportada. |
+| `diagnostico` | `VARCHAR(MAX)` | No | | | Causa raíz técnica determinada durante el servicio. |
+| `trabajos_realizados`| `VARCHAR(MAX)`| No | | | Resumen consolidado de las tareas ejecutadas. |
+| `resultado_pruebas`| `VARCHAR(MAX)`| No | | | Síntesis de las mediciones de funcionamiento exitosas. |
+| `estado_conformidad`| `VARCHAR(30)` | No | | `DEFAULT 'Pendiente'`, `CHECK (estado_conformidad IN ('Pendiente','Conforme','Con observaciones'))` | Calificación formal otorgada por el cliente. |
+| `fecha_conformidad`| `DATE` | Sí | | | Fecha en que el cliente otorgó su conformidad. |
+| `medio_conformidad`| `VARCHAR(50)` | Sí | | | Medio de acreditación (correo, acta firmada, plataforma). |
+
+###### 23. Tabla: `observacion_cliente`
+Registra las eventuales objeciones o reservas planteadas por el representante del cliente antes de firmar la conformidad definitiva.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_obs_cliente` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador de la objeción del cliente. |
+| `id_informe` | `INT` | No | FK | `REFERENCES informe_tecnico(id_informe) ON DELETE CASCADE` | Informe técnico sobre el cual se reclama. |
+| `descripcion` | `VARCHAR(MAX)` | No | | | Detalle del reclamo u observación efectuada. |
+| `fecha` | `DATE` | No | | | Fecha de emisión del reclamo por el cliente. |
+| `dentro_del_alcance`| `BIT` | No | | `DEFAULT 1` | Determina si la observación corresponde a lo contratado. |
+| `estado` | `VARCHAR(20)` | No | | `DEFAULT 'Pendiente'`, `CHECK (estado IN ('Pendiente','Atendida'))` | Estado de resolución técnica de la objeción. |
+| `fecha_atencion` | `DATE` | Sí | | | Fecha en que el astillero subsanó el reclamo. |
+
+###### 24. Tabla: `pago`
+Registra las transacciones económicas de liquidación del servicio, garantizando la verificación contable previa al cierre de la orden.
+
+| Columna | Tipo de dato | Nulo | Clave | Restricciones / Valor por defecto | Descripción / Regla de negocio |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| `id_pago` | `INT IDENTITY(1,1)` | No | PK | `PRIMARY KEY CLUSTERED` | Identificador del abono financiero. |
+| `id_orden` | `INT` | No | FK | `REFERENCES orden_servicio(id_orden)` | Orden de servicio que liquida la obligación. |
+| `fecha` | `DATE` | No | | | Fecha de realización de la transacción monetaria. |
+| `monto` | `DECIMAL(12,2)` | No | | `CHECK (monto > 0)` | Importe monetario transferido o depositado. |
+| `moneda` | `CHAR(3)` | No | | `CHECK (moneda IN ('PEN','USD'))` | Moneda de pago (Soles o Dólares Americanos). |
+| `medio_pago` | `VARCHAR(50)` | No | | `CHECK (medio_pago IN ('Transferencia','Cheque','Efectivo','Tarjeta de Credito','Deposito Bancario'))` | Canal de pago bancario verificado. |
+| `numero_operacion`| `VARCHAR(50)` | No | | | Código de transacción o número de operación bancaria. |
+| `verificado` | `BIT` | No | | `DEFAULT 0` | Confirmación bancaria efectuada por administración. |
+| `fecha_verificacion`| `DATE` | Sí | | | Fecha en que administración concilió el ingreso en cuenta. |
+| `tipo_comprobante`| `VARCHAR(30)` | No | | `CHECK (tipo_comprobante IN ('Factura','Boleta de Venta'))` | Tipo de comprobante de pago tributario emitido. |
+| `numero_comprobante`| `VARCHAR(30)` | No | | | Serie y número del comprobante tributario SUNAT. |
+
+#### Reglas de integridad referencial y resolución de caminos de cascada
+
+Uno de los desafíos técnicos más importantes en la implementación de modelos relacionales industriales de gran escala en Microsoft SQL Server reside en el control de las acciones referenciales (`ON DELETE` y `ON UPDATE`). El motor de SQL Server previene de manera proactiva la ambigüedad en el borrado en cascada emitiendo el error 1785 (*"Introducing FOREIGN KEY constraint may cause cycles or multiple cascade paths"*), el cual surge cuando existen múltiples caminos de borrado que convergen hacia una misma tabla dependiente.
+
+Para solventar esta restricción arquitectónica y asegurar una estabilidad transaccional intachable en Keel, se diseñaron las siguientes directrices de integridad referencial:
+
+1. **Borrado en cascada (`ON DELETE CASCADE`) restringido a composiciones estrictas:** Se aplicó borrado en cascada exclusivamente en tablas cuyas filas representan fragmentos indivisibles de una entidad padre y carecen de existencia independiente fuera de ella:
+   - `detalle_cotizacion` respecto a `cotizacion`: Si se elimina una versión de cotización en estado borrador, sus partidas presupuestarias se suprimen automáticamente.
+   - `detalle_compra` respecto a `orden_compra`: Si se cancela una orden de compra antes de ser transmitida, sus ítems desglosados se eliminan en conjunto.
+   - `participacion_trabajo`, `avance_trabajo` y `prueba` respecto a `trabajo`: Todas las horas hombre, reportes intermedios y mediciones de ensayo vinculadas a una tarea técnica dependen existencialmente de dicha tarea.
+   - `observacion_cliente` respecto a `informe_tecnico`: Las observaciones de disconformidad se encuentran ligadas de forma unívoca a la emisión del informe técnico correspondiente.
+2. **Acción restrictiva (`ON DELETE NO ACTION`) en entidades maestras y transaccionales:** En las 18 relaciones restantes —incluyendo `cliente`, `embarcacion`, `solicitud`, `orden_servicio`, `empleado`, `articulo`, `proveedor` y `pago`— se configuró `ON DELETE NO ACTION`. Esta política garantiza la inmutabilidad y auditabilidad exigidas por la normativa naval: no es admisible que la eliminación accidental de un cliente suprima solicitudes pasadas, historiales de fallas de una nave o registros de pagos verificados. Cualquier intento de eliminación de un registro maestro con dependencias operativas activas es rechazado categóricamente por el motor.
+3. **Resolución de la referencia circular entre `cotizacion` y `orden_servicio`:** Una cotización aprobada origina una orden de servicio (`fk_orden_cotizacion`), pero a su vez, los trabajos adicionales no contemplados inicialmente y surgidos durante la reparación generan nuevas cotizaciones vinculadas a dicha orden (`fk_cotizacion_orden`). Esta relación bidireccional fue resuelta en SQL Server mediante un desacoplamiento temporal durante la creación del esquema: la tabla `cotizacion` se crea con la columna `id_orden` como foránea diferida, y una vez compilada la tabla `orden_servicio`, se aplica la restricción mediante una sentencia `ALTER TABLE` configurada con `ON DELETE NO ACTION ON UPDATE NO ACTION`, impidiendo la creación de ciclos de cascada en tiempo de ejecución.
+
+#### Estrategia de indexación física para optimización de consultas
+
+Con el propósito de mitigar escaneos completos de tabla (*Table Scans*) y reducir el costo computacional de las consultas multi-tabla asociadas a las historias de usuario de Keel (como la consulta del historial de reparaciones de una nave en HU03, el seguimiento de avance en HU13 o el kardex de materiales en HU16), se diseñó e implementó un esquema de indexación física compuesto por:
+
+1. **Índices agrupados primarios (*Clustered Indexes*):** Cada una de las 24 tablas cuenta con un índice agrupado sobre su respectiva clave primaria (`pk_*`). Este índice define el orden físico de almacenamiento de las filas en las páginas de datos de 8 KB de SQL Server, permitiendo búsquedas directas por clave en tiempo constante o logarítmico $\mathcal{O}(\log N)$.
+2. **Índices de unicidad (*Unique Indexes*):** Se crearon índices únicos secundarios para resguardar la unicidad de identificadores de negocio: `uq_cliente_ruc`, `uq_empleado_dni`, `uq_proveedor_ruc`, `uq_embarcacion_matricula`, `uq_articulo_codigo`, `uq_orden_numero` y el índice compuesto `uq_cotizacion_num_ver`.
+3. **Índices no agrupados sobre claves foráneas (*Non-Clustered Indexes*):** SQL Server no crea índices automáticos sobre las claves foráneas. Por ende, se implementaron 23 índices no agrupados específicos (`ix_*`) en las columnas de enlace con mayor volumen de consulta, acelerando drásticamente las operaciones de combinación relacional (`INNER JOIN` y `LEFT JOIN`):
+   - `ix_embarcacion_cliente` e `ix_equipo_embarcacion`: Acelera la navegación desde el cliente hacia la ficha técnica de sus embarcaciones y sistemas.
+   - `ix_solicitud_embarcacion` e `ix_orden_servicio_embarcacion`: Optimiza la consolidación del expediente histórico de servicios de cada nave.
+   - `ix_trabajo_orden` e `ix_avance_trabajo`: Permite que la pantalla del jefe técnico cargue en milisegundos el árbol completo de tareas y progresos de una orden abierta.
+   - `ix_movimiento_articulo` e `ix_movimiento_trabajo`: Acelera las auditorías de consumos de repuestos y devoluciones de herramientas.
+
+#### Visualización del diagrama entidad-relación físico
+
+A continuación, se presenta el **diagrama entidad-relación físico** de la base de datos `BD_Keel`, generado directamente a partir de la ingeniería de datos del motor Microsoft SQL Server:
+
+<p align="center"><img src="images/diagrama-er-fisico.png" alt="Diagrama entidad-relación físico de Keel generado en Microsoft SQL Server" width="100%"></p>
+
+#### Descripción y distribución visual de los módulos en el diagrama
+
+El diagrama visual generado por el subsistema de diagramación relacional de SQL Server Management Studio refleja con fidelidad la topología del modelo de datos de Keel. Para facilitar su interpretación técnica, las 24 tablas físicas se organizan en **cinco conglomerados o clústeres funcionales interconectados**:
+
+1. **Clúster Comercial y de Clientes (Zona superior izquierda):** Compuesto por `cliente`, `representante`, `embarcacion`, `equipo` y `solicitud`. Este módulo modela el ingreso de las solicitudes comerciales y su vinculación con los activos navales a ser intervenidos. Cada cliente se conecta con cardinalidad 1 a N con sus representantes y sus embarcaciones, las cuales a su vez albergan sus equipos críticos de refrigeración y maquinaria.
+2. **Clúster de Presupuestos y Cotizaciones (Zona central superior):** Nucleado en `cotizacion` y `detalle_cotizacion`. Gobierna la estructura financiera previa al servicio. Se conecta con `solicitud` para reflejar la cotización inicial y con `orden_servicio` mediante una relación bidireccional que permite la facturación de adicionales imprevistos reportados por los técnicos.
+3. **Clúster Operativo y Gestión de Proyectos (Zona central y centro-derecha):** Integrado por `orden_servicio`, `trabajo`, `empleado`, `participacion_trabajo` y `avance_trabajo`. Es el núcleo operativo de Keel. La orden de servicio actúa como entidad ordenadora, dividiéndose en múltiples trabajos técnicos que cuentan con dependencias jerárquicas de precedencia (`id_trabajo_previo`), asignación de cuadrillas con horas trabajadas (`participacion_trabajo`) y reportes móviles de progreso físico con porcentaje de avance (`avance_trabajo`).
+4. **Clúster de Logística, Almacén y Adquisiciones (Zona inferior izquierda):** Conformado por `articulo`, `movimiento_almacen`, `proveedor`, `orden_compra` y `detalle_compra`. Modela el flujo físico y valorizado de materiales. La tabla `movimiento_almacen` enlaza el inventario directamente con los trabajos operativos en que son consumidos los repuestos, mientras que `orden_compra` y `detalle_compra` gestionan las reposiciones con proveedores externos ante roturas de stock mínimo.
+5. **Clúster de Calidad, SSOMA, Cierre y Cobranza (Zona inferior y lateral derecha):** Conformado por `inspeccion`, `prueba`, `observacion_ssoma`, `evidencia`, `informe_tecnico`, `observacion_cliente` y `pago`. Garantiza que ninguna reparación sea entregada o dada por cerrada sin antes contar con protocolos de prueba validados, controles de seguridad ambiental y laboral cerrados, evidencia fotográfica y documental vinculada, informe técnico de conformidad emitido y los pagos debidamente conciliados y verificados por el área administrativa.
+
+##### Guía de simbología del motor en el diagrama visual
+
+En el diagrama generado por Microsoft SQL Server Management Studio, la semántica de las relaciones físicas se interpreta mediante los siguientes elementos gráficos nativos:
+- **Icono de llave dorada:** Identifica visualmente las columnas que forman parte de la Clave Primaria (`PRIMARY KEY`) de la tabla.
+- **Líneas conectoras de relación:** Representan las restricciones de Clave Foránea (`FOREIGN KEY`). El extremo de la línea con el icono de la **llave** se ancla en la tabla padre (origen del valor unívoco referenciado), mientras que el extremo opuesto con el símbolo de **infinito ($\infty$)** o borde simple se conecta a la tabla hija que aloja la clave foránea, expresando físicamente la cardinalidad de uno a muchos ($1:N$).
+- **Tablas asociativas de cardinalidad compuesta:** Tablas como `participacion_trabajo` presentan llaves doradas en ambos campos (`id_trabajo` e `id_empleado`), denotando una clave primaria compuesta que a su vez se bifurca en dos líneas de relación hacia las tablas `trabajo` y `empleado`.
+
+##### Procedimiento para visualizar y regenerar el diagrama en el entorno de desarrollo
+
+Para interactuar con el diagrama físico en tiempo real o exportarlo en diferentes formatos vectoriales dentro de la infraestructura de DALERST, se sigue el procedimiento estandarizado en SQL Server Management Studio:
+1. Iniciar **SSMS** y autenticarse en la instancia local (`localhost` o `MSSQLSERVER`).
+2. En el panel del Explorador de Objetos (*Object Explorer*), expandir el nodo `Databases` $\rightarrow$ `BD_Keel`.
+3. Desplegar la carpeta **Database Diagrams**. Al acceder por primera vez, aceptar el cuadro de diálogo del motor para crear los objetos de soporte del sistema (`dbo.sysdiagrams`).
+4. Hacer clic derecho sobre **Database Diagrams** y seleccionar **New Database Diagram**.
+5. En el cuadro emergente *Add Table*, seleccionar las 24 tablas del esquema físico compilado y presionar **Add**.
+6. El motor dibujará automáticamente la totalidad de tablas y conectará las 45 relaciones de clave foránea. Finalmente, el usuario puede organizar los clústeres funcionales y exportar el diagrama mediante *Copy Diagram to Clipboard* o guardarlo directamente en el catálogo del motor.
 
 ### 4.2.2. Diagrama de documentos (TF1)
 
