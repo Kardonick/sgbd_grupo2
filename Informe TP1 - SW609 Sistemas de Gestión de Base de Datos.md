@@ -351,10 +351,10 @@ La guía tiene 18 preguntas principales agrupadas en ocho bloques que siguen el 
 | Distrito | \[completar\] |
 | Empresa y cargo | Refrymar Perú S.A.C., dirección de la empresa |
 | Fecha y modalidad | 12/11/2026, por videollamada |
-| URL de YouTube | \[completar\] |
-| Minuto de inicio y duración | Inicio: \[completar\]. Duración: 19 minutos aproximadamente. |
+| URL de YouTube | [https\://www\.youtube.com/watch?v=hxBYQtThdpo](https://www.youtube.com/watch?v=hxBYQtThdpo) |
+| Minuto de inicio y duración | Inicio: 00:00. Duración: 18:42. |
 
-*\[Insertar captura del video de la entrevista.\]*  
+<p align="center"><img src="images/captura-entrevista.png" alt="Captura del video de la entrevista" width="533"></p>
 **Resumen de las respuestas**  
 **Empresa y caso reciente (preguntas 1 y 2).** Refrymar se dedica al mantenimiento y la reparación de sistemas de refrigeración, sobre todo de embarcaciones pesqueras del Callao y de otros puertos del país, y también hace trabajos eléctricos y electrónicos relacionados con esos sistemas. El entrevistado recibe los pedidos, coordina la revisión inicial y prepara la propuesta con el área técnica de refrigeración. Como caso reciente contó el de una embarcación que no alcanzaba la temperatura de operación necesaria para conservar el pescado. Recibieron el aviso, prepararon la cotización, organizaron los trabajos, retiraron del almacén los materiales y ejecutaron la reparación. Durante la intervención encontraron un componente deteriorado que no estaba en la cotización inicial; lo cotizaron por separado y esperaron la autorización del cliente. Al final hicieron las pruebas, entregaron el informe y cobraron.  
 **Clientes, embarcaciones y equipos (preguntas 3 y 4).** El servicio lo contrató una empresa pesquera, que coordina por medio de un representante. Una misma empresa puede pedir trabajos para varias embarcaciones, y si cambia de representante lo comunica y el nuevo continúa con lo coordinado antes. La embarcación se identifica por su nombre, su matrícula y la empresa que contrata el servicio. Del equipo se anota la ubicación a bordo, la marca, el modelo y otros datos propios del equipo cuando están disponibles. Las cotizaciones y los informes se guardan en carpetas digitales ordenadas por cliente y embarcación, pero las fotografías y los mensajes quedan en otros lugares y hay que buscarlos para armar el historial.  
@@ -373,8 +373,9 @@ La guía tiene 18 preguntas principales agrupadas en ocho bloques que siguen el 
 
 * Refrymar atiende principalmente a embarcaciones pesqueras del Callao y de otros puertos del país, y sus clientes son empresas que coordinan por medio de un representante.  
 * El servicio sigue nueve etapas: pedido, inspección, cotización, aprobación, orden de servicio, ejecución de trabajos, pruebas, entrega con conformidad, y cobro y cierre.  
-* Intervienen siete roles: operaciones, jefe técnico, técnicos, almacén, compras, SSOMA y administración.  
-* De los ocho registros del proceso que mencionó, siete (87,5 %) se llevan en herramientas no conectadas entre sí (correo, Excel y carpetas con PDF). Solo los pagos (12,5 %) se registran en un sistema.
+* Intervienen siete roles: operaciones, jefe técnico, técnicos, almacén, compras, SSOMA y administración.
+
+De los ocho registros del proceso que mencionó, siete (87,5 %) se llevan en herramientas no conectadas entre sí (correo, Excel y carpetas con PDF). Solo los pagos (12,5 %) se registran en un sistema.
 
 | Medio actual | Registros que se llevan ahí | Cantidad | Porcentaje |
 | :---- | :---- | :---- | :---- |
@@ -382,7 +383,7 @@ La guía tiene 18 preguntas principales agrupadas en ocho bloques que siguen el 
 | Excel | Avance de los trabajos, inventario y salidas de almacén | 2 | 25,0 % |
 | Carpetas digitales y PDF | Historial de cotizaciones e informes, versiones de la cotización | 2 | 25,0 % |
 | Sistema de caja | Pagos | 1 | 12,5 % |
-| Total |  | 8 | 100 % |
+| **Total** |  | 8 | 100 % |
 
 **Características subjetivas**
 
