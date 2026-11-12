@@ -326,8 +326,8 @@ La guía tiene 18 preguntas principales agrupadas en ocho bloques que siguen el 
 | :---- | :---- |
 | Nombres | Alexis Yanpoll |
 | Apellidos | Garay Yovera |
-| Edad | [completar] |
-| Distrito | [completar] |
+| Edad | 20 |
+| Distrito | Rimac |
 | Empresa y cargo | Refrymar Perú S.A.C., dirección de la empresa |
 | Fecha y modalidad | 12/11/2026, por videollamada |
 | URL de YouTube | [https://www.youtube.com/watch?v=hxBYQtThdpo](https://www.youtube.com/watch?v=hxBYQtThdpo) |
