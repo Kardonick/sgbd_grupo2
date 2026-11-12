@@ -26,6 +26,7 @@ Lima, octubre de 2026
 | :---- | :---- | :---- | :---- |
 | 1.0 | 29/10/2026 | Franz Nuñez | Primera versión del informe: Capítulo I. |
 | 1.1 | 30/10/2026 | Roy Farid Puris Ricaldi | Redacción del Capítulo I (secciones 1.1 a 1.3). |
+| 1.2 | 12/11/2026 | Roy Farid Puris Ricaldi | Redacción de los capítulos II y III (secciones 2.1 a 3.3). |
 
 *Cada fila lleva un solo autor. Agregar una fila por cada versión relevante (secciones nuevas, correcciones por retroalimentación del docente, etc.).*
 
@@ -441,19 +442,332 @@ Además, el entrevistado pidió que registrar la información sea rápido y no g
 
 ## **3.1. Entidades**
 
-*\[Mínimo 10 entidades, cada una con su descripción.\]*  
+A partir de la entrevista y de los requisitos se identificaron 24 entidades. Están ordenadas según la etapa del proceso en la que aparecen.  
+**Cliente.** Empresa que contrata los servicios de reparación, por ejemplo una pesquera.  
+**Representante.** Persona que coordina con la empresa reparadora en nombre del cliente. Un cliente puede cambiar de representante.  
+**Embarcacion.** Nave del cliente que recibe los servicios.  
+**Equipo.** Sistema o equipo de refrigeración instalado en una embarcación.  
+**Solicitud.** Pedido de servicio que hace un cliente.  
+**Inspeccion.** Revisión técnica previa que permite definir el alcance y cotizar.  
+**Cotizacion.** Propuesta económica enviada al cliente. Cada cambio genera una nueva versión, y los trabajos adicionales que aparecen durante la ejecución se cotizan por separado.  
+**DetalleCotizacion.** Cada línea de una cotización.  
+**OrdenServicio.** Orden que se abre al aprobarse una cotización y agrupa todo el trabajo de una reparación.  
+**Trabajo.** Parte del alcance de una orden que se asigna a un responsable.  
+**Empleado.** Persona que trabaja en la empresa reparadora: técnicos, jefe técnico, almacén, compras, SSOMA, operaciones y administración.  
+**ParticipacionTrabajo.** Relación entre un trabajo y los técnicos que participan en él.  
+**AvanceTrabajo.** Registro de avance que reporta el responsable de un trabajo.  
+**Articulo.** Repuesto, material, herramienta o gas que se guarda en el almacén.  
+**MovimientoAlmacen.** Entrada o salida de un artículo: salida para un trabajo, devolución de sobrante, préstamo de herramienta, ingreso por compra o ajuste por inventario.  
+**Proveedor.** Empresa a la que se compran repuestos y materiales.  
+**OrdenCompra.** Pedido de compra a un proveedor cuando falta un repuesto o material.  
+**DetalleCompra.** Cada artículo pedido en una compra, con lo recibido.  
+**Prueba.** Prueba que valida un trabajo. Si falla, se registra un nuevo intento.  
+**ObservacionSSOMA.** Control, observación o incidente de seguridad registrado en una orden.  
+**Evidencia.** Fotografía o documento que respalda una inspección, un avance, una prueba o una observación de seguridad.  
+**InformeTecnico.** Informe final que se entrega al cliente.  
+**ObservacionCliente.** Observación del cliente sobre la entrega.  
+**Pago.** Pago del cliente por una orden de servicio.  
  
 
 ## **3.2. Atributos**
 
-*\[Atributos principales de cada entidad, con descripción.\]*  
+Para cada entidad se listan sus atributos principales. PK indica la clave primaria y FK una clave foránea.  
+**Cliente**
+
+* id\_cliente (PK): Identificador del cliente.  
+* razon\_social: Nombre legal de la empresa.  
+* ruc: Número de RUC, único.  
+* direccion: Dirección fiscal.  
+* telefono: Teléfono de contacto.  
+* correo: Correo de contacto.
+
+**Representante**
+
+* id\_representante (PK): Identificador del representante.  
+* id\_cliente (FK): Cliente al que representa.  
+* nombres: Nombres del representante.  
+* apellidos: Apellidos del representante.  
+* cargo: Cargo en la empresa cliente.  
+* telefono: Teléfono de contacto.  
+* correo: Correo de contacto.  
+* fecha\_inicio: Desde cuándo representa al cliente.  
+* fecha\_fin: Hasta cuándo lo representó; vacío si sigue vigente.
+
+**Embarcacion**
+
+* id\_embarcacion (PK): Identificador de la embarcación.  
+* id\_cliente (FK): Empresa propietaria o que contrata el servicio.  
+* nombre: Nombre de la embarcación.  
+* matricula: Matrícula, única.  
+* tipo: Tipo de embarcación, por ejemplo pesquera.  
+* puerto\_base: Puerto donde suele operar.
+
+**Equipo**
+
+* id\_equipo (PK): Identificador del equipo.  
+* id\_embarcacion (FK): Embarcación donde está instalado.  
+* tipo\_equipo: Tipo de equipo, por ejemplo compresor o evaporador.  
+* marca: Marca del equipo.  
+* modelo: Modelo del equipo.  
+* numero\_serie: Número de serie, si está disponible.  
+* ubicacion\_a\_bordo: Lugar de la embarcación donde se encuentra.  
+* refrigerante: Refrigerante que usa, por ejemplo amoniaco.
+
+**Solicitud**
+
+* id\_solicitud (PK): Identificador de la solicitud.  
+* id\_cliente (FK): Cliente que hace el pedido.  
+* id\_representante (FK): Persona que hizo el pedido.  
+* id\_embarcacion (FK): Embarcación afectada.  
+* fecha\_recepcion: Fecha y hora en que llegó el pedido.  
+* canal: Medio por el que llegó: correo, teléfono u otro.  
+* problema\_reportado: Descripción del problema según el cliente.  
+* urgencia: Nivel de urgencia: baja, media o alta.  
+* estado: Recibida, inspeccionada, cotizada, aprobada o archivada.
+
+**Inspeccion**
+
+* id\_inspeccion (PK): Identificador de la inspección.  
+* id\_solicitud (FK): Solicitud que origina la inspección.  
+* id\_empleado (FK): Persona que revisó el sistema.  
+* fecha: Fecha de la inspección.  
+* observaciones: Hallazgos de la revisión.  
+* mediciones: Valores medidos durante la revisión.  
+* alcance\_inicial: Trabajos que se proponen a partir de la revisión.  
+* costo: Costo de la inspección, si se cobra aparte.
+
+**Cotizacion**
+
+* id\_cotizacion (PK): Identificador de la cotización.  
+* id\_solicitud (FK): Solicitud a la que responde.  
+* id\_orden (FK): Orden de servicio, solo si es un adicional surgido durante la ejecución.  
+* id\_representante\_aprueba (FK): Representante que la aprobó.  
+* numero: Número de la cotización.  
+* version: Versión de la cotización (1, 2, 3...).  
+* tipo: Principal o adicional.  
+* fecha\_emision: Fecha en que se emitió.  
+* moneda: Moneda de los importes.  
+* subtotal: Importe sin impuestos.  
+* igv: Impuesto general a las ventas.  
+* total: Importe total.  
+* plazo\_dias: Plazo estimado de ejecución en días.  
+* fecha\_vigencia: Fecha hasta la que es válida.  
+* condiciones: Condiciones del servicio.  
+* archivo\_pdf: Ruta del PDF enviado al cliente.  
+* estado: Borrador, enviada, aprobada, rechazada, vencida o archivada.  
+* fecha\_aprobacion: Fecha en que el cliente la aprobó.  
+* evidencia\_aprobacion: Ruta del correo o documento de aprobación.
+
+**DetalleCotizacion**
+
+* id\_detalle (PK): Identificador de la línea.  
+* id\_cotizacion (FK): Cotización a la que pertenece.  
+* id\_articulo (FK): Artículo del almacén, si la línea es un repuesto o material.  
+* concepto: Mano de obra, repuesto, material, gas, traslado u otro.  
+* descripcion: Descripción de la línea.  
+* cantidad: Cantidad cotizada.  
+* unidad: Unidad de medida, por ejemplo horas o kilos.  
+* precio\_unitario: Precio por unidad.  
+* subtotal: Cantidad por precio unitario.
+
+**OrdenServicio**
+
+* id\_orden (PK): Identificador de la orden.  
+* id\_cotizacion (FK): Cotización aprobada que la origina.  
+* id\_embarcacion (FK): Embarcación que se repara.  
+* id\_jefe\_tecnico (FK): Empleado a cargo de la ejecución.  
+* numero: Número de la orden.  
+* fecha\_apertura: Fecha en que se abrió.  
+* fecha\_cierre: Fecha en que se cerró.  
+* estado: Abierta, en ejecución, en pruebas, entregada, pagada o cerrada.  
+* condiciones\_garantia: Condiciones de la garantía del servicio.  
+* fecha\_fin\_garantia: Fecha en que vence la garantía.
+
+**Trabajo**
+
+* id\_trabajo (PK): Identificador del trabajo.  
+* id\_orden (FK): Orden a la que pertenece.  
+* id\_responsable (FK): Empleado responsable del trabajo.  
+* id\_trabajo\_previo (FK): Trabajo que debe terminar antes, si van en secuencia.  
+* descripcion: Qué se debe hacer.  
+* especialidad: Especialidad requerida, por ejemplo refrigeración o electricidad.  
+* fecha\_inicio\_prevista: Inicio planificado.  
+* fecha\_fin\_prevista: Fin planificado.  
+* fecha\_inicio\_real: Inicio real.  
+* fecha\_fin\_real: Fin real.  
+* estado: Pendiente, en ejecución, en espera, en pruebas o terminado.  
+* motivo\_espera: Razón de la espera, por ejemplo falta de repuesto o de autorización.
+
+**Empleado**
+
+* id\_empleado (PK): Identificador del empleado.  
+* nombres: Nombres.  
+* apellidos: Apellidos.  
+* dni: Documento de identidad, único.  
+* rol: Rol en la empresa.  
+* especialidad: Especialidad técnica, si aplica.  
+* telefono: Teléfono de contacto.  
+* activo: Indica si sigue trabajando en la empresa.
+
+**ParticipacionTrabajo**
+
+* id\_trabajo (PK, FK): Trabajo.  
+* id\_empleado (PK, FK): Técnico que participa.  
+* funcion: Responsable o apoyo.  
+* horas\_trabajadas: Horas dedicadas al trabajo.
+
+**AvanceTrabajo**
+
+* id\_avance (PK): Identificador del avance.  
+* id\_trabajo (FK): Trabajo al que corresponde.  
+* id\_empleado (FK): Quien reporta el avance.  
+* fecha\_hora: Momento del reporte.  
+* descripcion: Lo realizado o encontrado.  
+* estado\_reportado: Estado del trabajo en ese momento.  
+* porcentaje\_avance: Porcentaje de avance estimado.
+
+**Articulo**
+
+* id\_articulo (PK): Identificador del artículo.  
+* codigo: Código interno, único.  
+* descripcion: Descripción del artículo.  
+* tipo: Repuesto, material, herramienta o gas.  
+* unidad: Unidad de medida.  
+* ubicacion: Lugar del almacén donde se guarda.  
+* stock\_actual: Cantidad disponible.  
+* stock\_minimo: Cantidad mínima antes de comprar.  
+* precio\_unitario: Precio de referencia.
+
+**MovimientoAlmacen**
+
+* id\_movimiento (PK): Identificador del movimiento.  
+* id\_articulo (FK): Artículo que se mueve.  
+* id\_trabajo (FK): Trabajo para el que sale o del que vuelve, si aplica.  
+* id\_empleado (FK): Persona que recibe o entrega.  
+* id\_detalle\_compra (FK): Línea de compra, si es un ingreso por compra.  
+* tipo: Salida, devolución, préstamo, ingreso o ajuste.  
+* cantidad: Cantidad movida.  
+* fecha: Fecha del movimiento.  
+* fecha\_devolucion\_prevista: Para préstamos de herramientas.  
+* observacion: Notas del movimiento.
+
+**Proveedor**
+
+* id\_proveedor (PK): Identificador del proveedor.  
+* razon\_social: Nombre legal.  
+* ruc: Número de RUC, único.  
+* contacto: Persona de contacto.  
+* telefono: Teléfono.  
+* correo: Correo.
+
+**OrdenCompra**
+
+* id\_compra (PK): Identificador de la compra.  
+* id\_proveedor (FK): Proveedor al que se pide.  
+* id\_trabajo (FK): Trabajo que espera la compra, si aplica.  
+* id\_empleado (FK): Persona de compras que la registra.  
+* fecha\_pedido: Fecha del pedido.  
+* estado: Solicitada, recibida parcialmente, recibida o anulada.  
+* total: Importe total.
+
+**DetalleCompra**
+
+* id\_detalle\_compra (PK): Identificador de la línea.  
+* id\_compra (FK): Compra a la que pertenece.  
+* id\_articulo (FK): Artículo pedido.  
+* cantidad\_pedida: Cantidad pedida.  
+* cantidad\_recibida: Cantidad recibida hasta el momento.  
+* precio\_unitario: Precio de compra.  
+* fecha\_recepcion: Fecha de la última recepción.  
+* condicion\_recepcion: Estado en que llegó el artículo.
+
+**Prueba**
+
+* id\_prueba (PK): Identificador de la prueba.  
+* id\_trabajo (FK): Trabajo que se prueba.  
+* id\_empleado (FK): Quien hizo la prueba.  
+* tipo\_prueba: Por ejemplo, prueba de funcionamiento en muelle.  
+* parametro: Magnitud medida, por ejemplo presión o temperatura.  
+* valor\_medido: Valor obtenido.  
+* unidad: Unidad del valor.  
+* valor\_minimo: Límite inferior aceptable.  
+* valor\_maximo: Límite superior aceptable.  
+* resultado: Conforme o no conforme.  
+* numero\_intento: Número de intento de la prueba.  
+* fecha: Fecha de la prueba.
+
+**ObservacionSSOMA**
+
+* id\_observacion (PK): Identificador de la observación.  
+* id\_orden (FK): Orden donde se registra.  
+* id\_trabajo (FK): Trabajo relacionado, si aplica.  
+* id\_responsable (FK): Empleado de SSOMA que la registra.  
+* fecha: Fecha del registro.  
+* momento: Antes, durante o después de la intervención.  
+* tipo: Control, observación o incidente.  
+* riesgo: Riesgo identificado, por ejemplo fuga de amoniaco.  
+* descripcion: Detalle de lo observado.  
+* accion\_requerida: Medida que se debe tomar.  
+* estado: Abierta o cerrada.
+
+**Evidencia**
+
+* id\_evidencia (PK): Identificador de la evidencia.  
+* id\_inspeccion (FK): Inspección a la que pertenece, si aplica.  
+* id\_avance (FK): Avance al que pertenece, si aplica.  
+* id\_prueba (FK): Prueba a la que pertenece, si aplica.  
+* id\_observacion (FK): Observación SSOMA a la que pertenece, si aplica.  
+* tipo: Fotografía, documento o medición.  
+* archivo\_url: Ruta del archivo.  
+* descripcion: Qué muestra la evidencia.  
+* fecha: Fecha en que se tomó.
+
+**InformeTecnico**
+
+* id\_informe (PK): Identificador del informe.  
+* id\_orden (FK): Orden a la que corresponde.  
+* id\_jefe\_tecnico (FK): Quien lo elaboró.  
+* fecha\_emision: Fecha de emisión.  
+* problema\_inicial: Problema reportado al inicio.  
+* diagnostico: Diagnóstico realizado.  
+* trabajos\_realizados: Resumen de los trabajos.  
+* resultado\_pruebas: Resumen de las pruebas.  
+* estado\_conformidad: Pendiente, conforme o con observaciones.  
+* fecha\_conformidad: Fecha en que el cliente dio su conformidad.  
+* medio\_conformidad: Correo u otro medio.
+
+**ObservacionCliente**
+
+* id\_obs\_cliente (PK): Identificador de la observación.  
+* id\_informe (FK): Informe observado.  
+* descripcion: Lo que observa el cliente.  
+* fecha: Fecha de la observación.  
+* dentro\_del\_alcance: Indica si corresponde al servicio contratado.  
+* estado: Pendiente o atendida.  
+* fecha\_atencion: Fecha en que se atendió.
+
+**Pago**
+
+* id\_pago (PK): Identificador del pago.  
+* id\_orden (FK): Orden que se paga.  
+* fecha: Fecha del pago.  
+* monto: Importe pagado.  
+* moneda: Moneda del pago.  
+* medio\_pago: Por ejemplo, transferencia.  
+* numero\_operacion: Número de la operación bancaria.  
+* verificado: Indica si administración confirmó el ingreso.  
+* fecha\_verificacion: Fecha de la verificación.  
+* tipo\_comprobante: Factura o boleta.  
+* numero\_comprobante: Serie y número del comprobante.
+
  
 
 ## **3.3. Enfoque relacional**
 
 ### **3.3.1. Diagrama entidad-relación lógico**
 
-*\[Diagrama con entidades, atributos, relaciones y cardinalidades.\]*  
+El diagrama muestra las 24 entidades con sus atributos y las relaciones entre ellas. Las cardinalidades se indican con 1 y N en cada extremo de la relación.  
+<p align="center"><img src="images/diagrama-er-logico.png" alt="Diagrama entidad-relación lógico de Keel" width="624"></p>
  
 
 ## **3.4. Enfoque no relacional (TF1)**
